@@ -2,6 +2,8 @@ from django.urls import path
 
 from . import views
 from . import relative_views
+from . import prescription_views
+from . import inventory_views
 
 
 app_name = "residents"
@@ -37,5 +39,18 @@ urlpatterns = [
         "<int:pk>/eliminar_familiar/<int:relative_pk>/",
         relative_views.DeleteRelativeView.as_view(),
         name="delete_relative",
+    ),
+    # name: residents:new_prescription, path: /residentes/<pk>/nueva_prescripcion/
+    path(
+        "<int:pk>/nueva_prescripcion/",
+        prescription_views.NewPrescriptionView,
+        name="new_prescription",
+    ),
+
+    # name: residents:create_report, path: /residentes/<pk>/create_report/    
+    path(
+        "<int:pk>/crear_reporte/",
+        inventory_views.CreateReport.as_view(),
+        name="create_report",
     ),
 ]

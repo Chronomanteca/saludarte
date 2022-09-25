@@ -11,7 +11,7 @@ from django.views.generic import (
     DeleteView,
 )
 
-from .models import Resident
+from .models import Resident, Prescription, Presentation
 
 
 class OnlyAccessMySiteResidentsMixin(UserPassesTestMixin):
@@ -69,6 +69,7 @@ class DetailResidentView(
     - First page: resident's basic information
     - Second page: resident's relatives
     - Third page: resident's medical information
+    - Fourth page: Medication inventory TODO
 
     Offers actions to edit the resident:
     - Edit the resident's information (relatives and inventory too)
@@ -84,6 +85,7 @@ class DetailResidentView(
         return [
             resident,
             resident.relative_set.all().order_by("kinship"),
+            resident.prescription_set.all(),
             resident,
         ]
 

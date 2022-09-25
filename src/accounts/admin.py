@@ -3,6 +3,8 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 from .models import User
 from .models import Site
+from residents.models import Resident, Relative, MedicationInventory, Prescription, distribution
+from medications.models import Medication, Presentation
 
 
 class UserAdmin(BaseUserAdmin):
@@ -65,7 +67,9 @@ class UserAdmin(BaseUserAdmin):
     ordering = ("email",)
 
 
+
+
 # Register the custom user model
 admin.site.register(User, UserAdmin)
-
 admin.site.register(Site)
+

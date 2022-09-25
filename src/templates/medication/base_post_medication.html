@@ -78,7 +78,8 @@
       {% endcomment %}
       <tbody>
         {% for form in presentation_formset %}
-        <tr id="forms_container">
+        <tr id="forms_container">                      
+          
           {# Type and measure unit #}
           {% for field in form|get_fields:"type,measure_unit" %}
           <td>

@@ -34,7 +34,12 @@
       </li>
       <li class="list-inside font-raleway nav-item text-slate-800 {% if page_obj.number == 3 %}active{% endif %}">
         <a href="?page=3">
-          PRESCRIPCIÓN DEL RESIDENTE
+          PRESCRIPCIÓNES DEL RESIDENTE
+        </a>
+      </li>
+      <li class="list-inside font-raleway nav-item text-slate-800 {% if page_obj.number == 4 %}active{% endif %}">
+        <a href="?page=4">
+          INVENTARIO DE MEDICAMENTOS DEL RESIDENTE
         </a>
       </li>
     </ul>
@@ -267,11 +272,92 @@
   {% endwith %}
 
   {# Third page: resident's medical information #}
-  {% else %}
+  {% elif page_obj.number == 3%}
+
+  <div class="flex flex-col gap-4">
+    <div class="flex flex-wrap justify-center gap-8 px-8 py-6 border-2 rounded-md border-slate-800">
+
+      {# Left side: list of relatives #}
+      <div class="flex flex-col items-stretch">
+
+        <h2 class="text-xl text-left font-raleway font-medium text-slate-800">
+          Prescripciones
+        </h2>
+
+        <ul class="mt-1 list-decimal" type="1">
+          {% for prescription in prescriptions %}
+          <li id="relative_{{ forloop.counter0 }}" class="relative_item list-inside cursor-pointer uppercase font-raleway nav-item text-slate-800 
+            {% if forloop.counter == 1 %}active{% endif %}">
+            <span onclick="selectPrescription({{ forloop.counter0 }})">
+              Prescripcion # {{ forloop.counter }} - {{ prescription.get_kinship_display }}
+            </span>
+          </li>
+          {% empty %}
+          <li class="list-none uppercase font-raleway text-slate-800">
+            <span>No hay Prescripciones registradas</span>
+          </li>
+          {% endfor %}
+        </ul>
+
+      </div>
+
+      {# Right side: relative's information #}
+      {% for relative in relatives %}
+      <div class="relative_item_info flex flex-col items-start gap-3 {% if forloop.counter != 1 %}hidden{% endif %}">
+
+        {# Name #}
+        <div class="mt-2 flex flex-col">
+          <div class="text-lg leading-4 font-raleway text-slate-800">NOMBRE</div>
+          <div class="text-xl font-light font-roboto">{{ relative.get_full_name }}</div>
+        </div>
+      </div>
+      {% endfor %}
+
+    </div>
+
+    {# Page action buttons #}
+    <div class="flex flex-wrap gap-3">
+      <a href="{% url 'residents:index' %}" class="btn btn-primary self-stretch">VOLVER</a>
+      <a href="{% url 'residents:new_prescription' view.kwargs.pk %}" class="btn btn-primary self-stretch">NUEVO</a>
+
+      {# Edit and delete are relative-specific #}
+
+      {% for relative in relatives %}
+
+      <a href="{% url 'residents:edit_relative' view.kwargs.pk relative.id %}"
+        class="btn btn-primary self-stretch relative_item_edit {% if forloop.counter != 1 %}hidden{% endif %}">EDITAR</a>
+
+      <form action="{% url 'residents:delete_relative' view.kwargs.pk relative.id %}" method="post"
+        onsubmit="return confirm('¿Estás se ro que deseas eliminar este familiar? Esta acción es irreversible');"
+        class="relative_item_delete {% if forloop.counter != 1 %}hidden{% endif %}">
+        {% csrf_token %}
+        <input type="submit" class="btn btn-primary" value="ELIMINAR" />
+      </form>
+
+      {% endfor %}
+    </div>
+
+    {# Page messages #}
+    {% if messages %}
+    <div class="flex flex-col gap-3">
+      {% for message in messages %}
+      <div class="message w-full {% if message.tags %}{{ message.tags }}{% endif %}">
+        {{ message }}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
 
 
+  </div>
 
-  {% endif %}
+  {# fourth page: resident's medication inventory #}
+  {% elif page_obj.number == 4%}
+
+  <a href="{% url 'residents:create_report' view.kwargs.pk %}" class="btn btn-primary self-stretch">ENVIAR REPORTE</a>
+
+  {% endif%}
+  
 
 </div>
 

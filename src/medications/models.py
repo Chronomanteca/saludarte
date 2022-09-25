@@ -18,7 +18,7 @@ class Medication(models.Model):
         max_length=512,
         blank=True,
         null=True,
-    )
+    )    
 
     def __str__(self):
         return self.name
@@ -87,6 +87,10 @@ class Presentation(models.Model):
         "medida",
         blank=False,
     )
+    
+
+    def __str__(self):
+        return self.medication.name+" "+self.get_type_display()+" "+str(self.measure)+" "+self.get_measure_unit_display()
 
     class Meta:
         verbose_name = "Presentación"
