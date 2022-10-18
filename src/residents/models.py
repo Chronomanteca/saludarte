@@ -1,5 +1,4 @@
 from contextlib import nullcontext
-from importlib.metadata import distribution
 from django.db import models
 from django.urls import reverse_lazy
 from core.models import Person
@@ -10,6 +9,8 @@ from django.core.mail import send_mail
 from django.conf import settings
 
 from datetime import date,timedelta
+
+from accounts.models import User
 
 
 class Resident(Person):
@@ -46,6 +47,9 @@ class Resident(Person):
         max_length=128,
         blank=True,
     )
+
+    def get_full_name(self):
+        return self.first_name + " " +self.last_name
 
     def __str__(self):
         return self.first_name + " " +self.last_name
@@ -201,18 +205,46 @@ class Prescription(models.Model):
         blank=False,
     )
 
+    responsible = models.TextField(
+        "encargado de registro",
+        max_length=128,
+        default = "Ninguno",
+        blank=True,
+        null=True,
+    )
+
+    date_delivery = models.DateTimeField(
+        "fecha de recepcion",
+        default=timezone.now,
+        blank=True,
+        null=True,
+    ) 
+    
+    def get_full_dosage(self):        
+        return str(self.dosage)+" "+self.get_dosage_units_display()
+
     def get_resident(self):
-        return self.resident.__str__()
+        return self.resident.__str__()    
+
+    def get_presentation_list(self):
+        return Presentation.objects.all()
+    
+    def get_presentation(self):
+        return self.presentation.__str__()
 
     def salida_semanal(self):
         return str(self.get_weekly_issues())
+
+    def get_distributions(self):
+        dist = Distribution.objects.filter(prescription = self)
+        return dist
 
     def get_weekly_issues(self):
         """
         dosage is daily
         so, weekly duration is dosage * 7
         """
-        return self.dosage * 7
+        return str(self.dosage * 7) +" "+ self.get_dosage_units_display()
 
     def get_dosage_unit(self):
         return self.get_dosage_unit    
@@ -224,8 +256,8 @@ class Prescription(models.Model):
     def get_dosage(self):
         return self.dosage
 
-    def __str__(self):   
-        msg = self.presentation.__str__()+" , administrar  "+str(self.dosage)+" "+self.get_dosage_units_display()    
+    def __str__(self): 
+        msg = self.resident.__str__()+" "+self.presentation.__str__()+" , administrar  "+str(self.dosage)+" "+self.get_dosage_units_display()    
         return msg
 
 
@@ -259,7 +291,7 @@ DISTRIBUTION_HOUR_CHOICES = (
     (EVENING, "Noche"),
 )
 
-class distribution(models.Model):
+class Distribution(models.Model):
 
     """
     Aqui mover residente
@@ -288,7 +320,7 @@ class distribution(models.Model):
     dosis_diaria = models.FloatField(
         "dosis diaria",
         blank = False
-    )
+    )    
     
     comentarios = models.TextField(
         "comentarios",
@@ -297,15 +329,14 @@ class distribution(models.Model):
         null=True,
     )  
 
-    def residente(self):
-        return self.prescription.get_resident()
-
     class Meta:
         verbose_name = "Distribucion"
         verbose_name_plural = "Distribuciones"   
 
-    def __str__(self):        
-        return self.prescription.__str__()+" dar "+str(self.dosis_diaria)+" "+self.prescription.get_dosage_units_display()+" en la "+self.get_hora_display()
+    def __str__(self):
+        #msg =self.prescription.__str__()+" dar "+str(self.dosis_diaria)+" "+self.prescription.get_dosage_units_display()+" en la "+self.get_hora_display()
+        msg = str(self.id)
+        return msg
 
 
 class MedicationInventory(models.Model):
@@ -352,7 +383,7 @@ class MedicationInventory(models.Model):
         verbose_name="familiar",
         on_delete=models.CASCADE,
         null=True,
-        blank=True,
+        blank=False,
     )
 
     presentation = models.ForeignKey(
@@ -360,17 +391,18 @@ class MedicationInventory(models.Model):
         verbose_name="presentacion",
         on_delete=models.CASCADE,
         null=True,
-        blank=True,
+        blank=False,
     )  
 
     ammount = models.IntegerField(
         "cantidad",
-        blank = True
+        blank = False,
+        null=True,
     )  
 
     delivery_units = models.SmallIntegerField(
         "unidad",
-        blank =True,
+        blank =False,
         null=True,
         choices= PRESCRIPTION_DOSAGE_UNIT_CHOICES,
     )  
@@ -385,25 +417,48 @@ class MedicationInventory(models.Model):
     comentarios = models.TextField(
         "comentarios",
         max_length=512,
+        default = "Niguno",
         blank=True,
         null=True,
     )
 
+    responsible = models.ForeignKey(
+        User,
+        verbose_name="responsable",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=False,
+    )  
+
     def get_resident(self):
-        return self.resident.__str__()                           
+        return self.resident.__str__()  
+
+    def get_prescription_dosage(self):
+        pres = Prescription.objects.filter(resident = self.resident).get(presentation = self.presentation)        
+        return pres.get_full_dosage()
+
+    def get_presentation(self):
+        return self.presentation.__str__()   
+
+    def get_weekly_issues(self):
+        pres = Prescription.objects.filter(resident = self.resident).get(presentation = self.presentation)      
+        return  pres.get_weekly_issues()    
+
+    def get_full_ammount(self):
+        return str(self.ammount)+" "+self.get_delivery_units_display()
         
 
     def email(self):
         subj = "informe de duracion de medicamentos de "+self.resident.__str__()
         msg = "El Residente "+self.resident.__str__()+" tiene  "+str(self.ammount)+" "+self.get_delivery_units_display()+" de "+self.presentation.__str__()+". "+self.calculate_total_span()       
-        self.email_test(msg,subj)
+       # self.email_test(msg,subj)
         return "correo enviado"
 
 
     def __str__(self):
         subj = "informe de duracion de medicamentos de "+self.resident.__str__()
         msg = "El Residente "+self.resident.__str__()+" tiene  "+str(self.ammount)+" "+self.get_delivery_units_display()+" de "+self.presentation.__str__()+". "+self.calculate_total_span()       
-        self.email_test(msg,subj)
+        #self.email_test(msg,subj)
         return msg
 
     def get_email_list(self):

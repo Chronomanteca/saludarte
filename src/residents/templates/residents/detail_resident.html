@@ -69,37 +69,37 @@
 
         {# Name #}
         <div class="flex flex-col">
-          <div class="text-lg leading-4 font-raleway text-slate-800">NOMBRE</div>
+          <div class="text-lg leading-4 font-bold font-raleway text-slate-800">NOMBRE</div>
           <div class="text-xl font-light font-roboto">{{ resident.get_full_name }}</div>
         </div>
 
         {# Identification number #}
         <div class="flex flex-col">
-          <div class="text-lg leading-4 font-raleway text-slate-800">DOCUMENTO</div>
+          <div class="text-lg leading-4 font-bold font-raleway text-slate-800">DOCUMENTO</div>
           <div class="text-xl font-light font-roboto">{{ resident.get_formatted_identification }}</div>
         </div>
 
         {# Gender #}
         <div class="flex flex-col">
-          <div class="text-lg leading-4 font-raleway text-slate-800">GÉNERO</div>
+          <div class="text-lg leading-4 font-bold font-raleway text-slate-800">GÉNERO</div>
           <div class="text-xl font-light font-roboto">{{ resident.get_gender_display }}</div>
         </div>
 
         {# Site #}
         <div class="flex flex-col">
-          <div class="text-lg leading-4 font-raleway text-slate-800">SEDE</div>
+          <div class="text-lg leading-4 font-bold font-raleway text-slate-800">SEDE</div>
           <div class="text-xl font-light font-roboto">{{ resident.site.name }}</div>
         </div>
 
         {# EPS #}
         <div class="flex flex-col">
-          <div class="text-lg leading-4 font-raleway text-slate-800">EPS</div>
+          <div class="text-lg leading-4 font-bold font-raleway text-slate-800">EPS</div>
           <div class="text-xl font-light font-roboto">{{ resident.eps }}</div>
         </div>
 
         {# Birthdate #}
         <div class="flex flex-col">
-          <div class="text-lg leading-4 font-raleway text-slate-800">FECHA DE NACIMIENTO</div>
+          <div class="text-lg leading-4 font-bold font-raleway text-slate-800">FECHA DE NACIMIENTO</div>
           <div class="text-xl font-light font-roboto">
             {% timezone "America/Bogota" %}
             {{ resident.date_birth|date:"d/m/Y" }}
@@ -109,7 +109,7 @@
 
         {# Date joined #}
         <div class="flex flex-col">
-          <div class="text-lg leading-4 font-raleway text-slate-800">FECHA DE INGRESO</div>
+          <div class="text-lg leading-4 font-bold font-raleway text-slate-800">FECHA DE INGRESO</div>
           <div class="text-xl font-light font-roboto">
             {% timezone "America/Bogota" %}
             {{ resident.date_joined|date:"d/m/Y" }}
@@ -273,11 +273,13 @@
 
   {# Third page: resident's medical information #}
   {% elif page_obj.number == 3%}
+  {% with prescriptions=page_obj|first %}
 
   <div class="flex flex-col gap-4">
     <div class="flex flex-wrap justify-center gap-8 px-8 py-6 border-2 rounded-md border-slate-800">
 
-      {# Left side: list of relatives #}
+      {# Left side: list of prescriptions #}    
+
       <div class="flex flex-col items-stretch">
 
         <h2 class="text-xl text-left font-raleway font-medium text-slate-800">
@@ -286,10 +288,10 @@
 
         <ul class="mt-1 list-decimal" type="1">
           {% for prescription in prescriptions %}
-          <li id="relative_{{ forloop.counter0 }}" class="relative_item list-inside cursor-pointer uppercase font-raleway nav-item text-slate-800 
+          <li id="prescription_{{forloop.counter0}}" class="prescription_item list-inside cursor-pointer uppercase font-raleway nav-item text-slate-800 
             {% if forloop.counter == 1 %}active{% endif %}">
-            <span onclick="selectPrescription({{ forloop.counter0 }})">
-              Prescripcion # {{ forloop.counter }} - {{ prescription.get_kinship_display }}
+            <span onclick="selectPrescription({{ forloop.counter0 }})">              
+             {{prescription.get_presentation}} 
             </span>
           </li>
           {% empty %}
@@ -301,35 +303,52 @@
 
       </div>
 
-      {# Right side: relative's information #}
-      {% for relative in relatives %}
-      <div class="relative_item_info flex flex-col items-start gap-3 {% if forloop.counter != 1 %}hidden{% endif %}">
+      {# Right side: prescription information#}
+      {% for prescription in prescriptions %}
+      <div class="prescription_item_info flex flex-col items-start gap-3 {% if forloop.counter != 1 %}hidden{% endif %}">
 
-        {# Name #}
+        {# Dosis + unidad #}
         <div class="mt-2 flex flex-col">
-          <div class="text-lg leading-4 font-raleway text-slate-800">NOMBRE</div>
-          <div class="text-xl font-light font-roboto">{{ relative.get_full_name }}</div>
+          <div class="text-lg leading-4 font-bold font-raleway text-slate-800">DOSIS TOTAL</div>
+          <div class="text-xl font-light font-roboto">{{ prescription.get_dosage }}  {{prescription.get_dosage_units_display}}</div>
         </div>
+        {# Distribuciones #}
+        <div class="mt-2 flex flex-col">
+          <div class="text-lg leading-4 font-bold font-raleway text-slate-800">DISTRIBUCIONES</div>
+        
+          {%for distribution in prescription.get_distributions%}
+          <div class="mt-2 flex flex-col">
+            <div class="text-xl font-light font-roboto">Hora: {{distribution.get_hora_display}} </div>
+            <div class="text-xl font-light font-roboto">Dosis {{distribution.dosis_diaria}} {{prescription.get_dosage_units_display}} </div>
+            <div class="text-xl font-light font-roboto">Indicaciones {{distribution.comentarios}}</div>
+            
+          </div>
+          {%endfor%}        
+        </div> 
+
+        
       </div>
+
+      
       {% endfor %}
 
     </div>
 
-    {# Page action buttons #}
+        {# Page action buttons #}
     <div class="flex flex-wrap gap-3">
       <a href="{% url 'residents:index' %}" class="btn btn-primary self-stretch">VOLVER</a>
       <a href="{% url 'residents:new_prescription' view.kwargs.pk %}" class="btn btn-primary self-stretch">NUEVO</a>
 
       {# Edit and delete are relative-specific #}
 
-      {% for relative in relatives %}
+      {% for prescription in prescriptions %}
 
-      <a href="{% url 'residents:edit_relative' view.kwargs.pk relative.id %}"
-        class="btn btn-primary self-stretch relative_item_edit {% if forloop.counter != 1 %}hidden{% endif %}">EDITAR</a>
+     {# <a href="{% url 'residents:edit_relative' view.kwargs.pk relative.id %}"#}
+       {# class="btn btn-primary self-stretch relative_item_edit {% if forloop.counter != 1 %}hidden{% endif %}">EDITAR</a> #}
 
-      <form action="{% url 'residents:delete_relative' view.kwargs.pk relative.id %}" method="post"
-        onsubmit="return confirm('¿Estás se ro que deseas eliminar este familiar? Esta acción es irreversible');"
-        class="relative_item_delete {% if forloop.counter != 1 %}hidden{% endif %}">
+      <form action="{% url 'residents:delete_prescription' view.kwargs.pk prescription.id %}" method="post"
+        onsubmit="return confirm('¿Estás seguro que deseas eliminar esta prescripicion? Esta acción es irreversible');"
+        class="prescription_item_delete {% if forloop.counter != 1 %}hidden{% endif %}">
         {% csrf_token %}
         <input type="submit" class="btn btn-primary" value="ELIMINAR" />
       </form>
@@ -351,19 +370,84 @@
 
   </div>
 
+  {%endwith%}
+
   {# fourth page: resident's medication inventory #}
   {% elif page_obj.number == 4%}
+  {% with entries=page_obj|first %}
+  <div class="flex flex-col gap-4">
+    <div class="flex flex-wrap justify-center gap-8 px-8 py-6 border-2 rounded-md border-slate-800">
+      {# Left side: list of inentory entries #}    
 
-  <a href="{% url 'residents:create_report' view.kwargs.pk %}" class="btn btn-primary self-stretch">ENVIAR REPORTE</a>
+      <div class="flex flex-col items-stretch">
 
-  {% endif%}
+        <h2 class="text-xl text-left font-raleway font-medium text-slate-800">
+          Inventario de medicamentos
+        </h2>
+
+        <ul class="mt-1 list-decimal" type="1">
+          {% for entry in entries %}
+          <li id="entry_{{forloop.counter0}}" class="entry_item list-inside cursor-pointer uppercase font-raleway nav-item text-slate-800 
+            {% if forloop.counter == 1 %}active{% endif %}">
+            <span onclick="selectEntry({{ forloop.counter0 }})">              
+             {{entry.get_presentation}} 
+            </span>
+          </li>
+          {% empty %}
+          <li class="list-none uppercase font-raleway text-slate-800">
+            <span>No hay Prescripciones registradas</span>
+          </li>
+          {% endfor %}
+        </ul>            
+      </div>
+      {# Right side: prescription information#}
+      {% for entry in entries %}
+      <div class="entry_item_info flex flex-col items-start gap-3 {% if forloop.counter != 1 %}hidden{% endif %}">
+
+        {# cantidad #}
+        <div class="mt-2 flex flex-col">
+          <div class="text-lg leading-4 font-bold font-raleway text-slate-800">CANTIDAD</div>
+          <div class="text-xl font-light font-roboto">{{ entry.ammount }}  {{entry.get_delivery_units_display}}</div>
+        </div>
+        {# fecha de entrega#}
+        <div class="mt-2 flex flex-col">
+          <div class="text-lg leading-4 font-bold font-raleway text-slate-800">FECHA DE ENTREGA</div>
+          <div class="text-xl font-light font-roboto">{{ entry.date_delivery }}</div>
+        </div>
+        {# familiar que hizo la entrega#}
+        <div class="mt-2 flex flex-col">
+          <div class="text-lg leading-4 font-bold font-raleway text-slate-800">ENTREGADO POR </div>
+          <div class="text-xl font-light font-roboto">{{ entry.relative }}</div>
+        </div>
+        {# comentarios #}
+        <div class="mt-2 flex flex-col">
+          <div class="text-lg leading-4 font-bold font-raleway text-slate-800">COMENTARIOS </div>
+          <div class="text-xl font-light font-roboto">{{ entry.comentarios }}</div>
+        </div>
+
+       
+      </div>
+
+      
+      {% endfor %}
+  
+    </div>
+  <div class="flex flex-wrap gap-3">
+    <a href="{% url 'residents:index' %}" class="btn btn-primary self-stretch">VOLVER</a>
+    <a href="{% url 'residents:new_inventory_entry' view.kwargs.pk %}" class="btn btn-primary self-stretch">NUEVO</a>
+    {# <a href="{% url 'residents:create_report' view.kwargs.pk %}" class="btn btn-primary self-stretch">ENVIAR REPORTE</a> #}
+
+  
+  {% endwith%}
+  </div>
+  {%endif%}
   
 
 </div>
 
 {% endblock %}
-
 {% block script %}
+{#Scripts Relatives#}
 <script>
   function selectRelative(relative_number, relative_id) {
     const selected_item = document.getElementById("relative_" + relative_number);
@@ -417,4 +501,116 @@
     }
   }
 </script>
+{#Scripts Prescription#}
+<script>
+  function selectPrescription(prescription_number, prescription_id) {
+    const selected_item = document.getElementById("prescription_" + prescription_number);
+
+    // Add active to the selected item
+    if (!selected_item.classList.contains("active")) {
+      selected_item.classList.add("active");
+    } else {
+      return;
+    }
+
+    // Remove active from all other items
+    const items = document.getElementsByClassName("prescription_item");
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].classList.contains("active") && i != prescription_number) {
+        items[i].classList.remove("active");
+      }
+    }
+
+    // Hide all unselected relative's infos
+    const prescription_items = document.getElementsByClassName("prescription_item_info");
+
+    for (var i = 0; i < prescription_items.length; i++) {
+      if (i == prescription_number && prescription_items[i].classList.contains("hidden")) {
+        prescription_items[i].classList.remove("hidden");
+      } else if (!prescription_items[i].classList.contains("hidden")) {
+        prescription_items[i].classList.add("hidden");
+      }
+    }
+
+    // Hide all unselected relative's edit buttons
+    const prescription_items_edit = document.getElementsByClassName("prescription_item_edit");
+
+    for (var i = 0; i < prescription_items_edit.length; i++) {
+      if (i == prescription_number && prescription_items_edit[i].classList.contains("hidden")) {
+        prescription_items_edit[i].classList.remove("hidden");
+      } else if (!prescription_items_edit[i].classList.contains("hidden")) {
+        prescription_items_edit[i].classList.add("hidden");
+      }
+    }
+
+    // Hide all unselected relative's delete buttons
+    const prescription_delete_buttons = document.getElementsByClassName("prescription_item_delete");
+
+    for (var i = 0; i < prescription_delete_buttons.length; i++) {
+      if (i == prescription_number && prescription_delete_buttons[i].classList.contains("hidden")) {
+        prescription_delete_buttons[i].classList.remove("hidden");
+      } else if (!prescription_delete_buttons[i].classList.contains("hidden")) {
+        prescription_delete_buttons[i].classList.add("hidden");
+      }
+    }
+  }
+</script>
+{#Scripts inventory#}
+<script>
+  function selectEntry(entry_number, entry_id) {
+    const selected_item = document.getElementById("entry_" + entry_number);
+
+    // Add active to the selected item
+    if (!selected_item.classList.contains("active")) {
+      selected_item.classList.add("active");
+    } else {
+      return;
+    }
+
+    // Remove active from all other items
+    const items = document.getElementsByClassName("entry_item");
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].classList.contains("active") && i != entry_number) {
+        items[i].classList.remove("active");
+      }
+    }
+
+    // Hide all unselected relative's infos
+    const entry_items = document.getElementsByClassName("entry_item_info");
+
+    for (var i = 0; i < entry_items.length; i++) {
+      if (i == entry_number && entry_items[i].classList.contains("hidden")) {
+        entry_items[i].classList.remove("hidden");
+      } else if (!entry_items[i].classList.contains("hidden")) {
+        entry_items[i].classList.add("hidden");
+      }
+    }
+
+    // Hide all unselected relative's edit buttons
+    const entry_items_edit = document.getElementsByClassName("entry_item_edit");
+
+    for (var i = 0; i < entry_items_edit.length; i++) {
+      if (i == entry_number && entry_items_edit[i].classList.contains("hidden")) {
+        entry_items_edit[i].classList.remove("hidden");
+      } else if (!entry_items_edit[i].classList.contains("hidden")) {
+        entry_items_edit[i].classList.add("hidden");
+      }
+    }
+
+    // Hide all unselected relative's delete buttons
+    const entry_delete_buttons = document.getElementsByClassName("entry_item_delete");
+
+    for (var i = 0; i < entry_delete_buttons.length; i++) {
+      if (i == entry_number && entry_delete_buttons[i].classList.contains("hidden")) {
+        entry_delete_buttons[i].classList.remove("hidden");
+      } else if (!entry_delete_buttons[i].classList.contains("hidden")) {
+        entry_delete_buttons[i].classList.add("hidden");
+      }
+    }
+  }
+</script>
+
+
 {% endblock %}
+
+

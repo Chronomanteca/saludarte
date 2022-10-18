@@ -1,0 +1,123 @@
+{% extends "layouts/base_authenticated.html" %}
+
+{# TODO: Timezones are kinda broken and need to be manually set #}
+{% load tz %}
+
+{% block title %}Residentes{% endblock %}
+
+{% block body %}
+
+<div class="container flex flex-col gap-4 mx-auto">
+
+  {% if messages %}
+  <div class="flex flex-col gap-3">
+    {% for message in messages %}
+    <div class="message w-full {% if message.tags %}{{ message.tags }}{% endif %}">
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {# Action buttons #}
+  
+  <div class="flex gap-3">
+  <div>
+    <p>Fecha inicial</p>
+    <input type="date" id="dateStart" class="form-control input-text font-roboto"/>
+  </div>               
+  <div>
+    <p>Fecha final</p>
+    <input type="date" id="dateEnd" class="form-control input-text font-roboto"/>
+  </div>  
+    <button onclick="generateReport()" id="btn_generate_report" class="btn btn-primary">CALCULAR SALDOS</button>
+  </div>
+
+
+  {# Residents table, rendered using datatables (js) #}
+  <table id="stock-datatable" class="display compact">
+    {# Table header #}
+    <thead>
+      <tr class="font-raleway text-slate-800">
+        <th>RESIDENTE</th>
+        <th>MEDICAMENTO</th>
+        <th>DOSIS DIARIA</th>
+        <th>CANTIDAD EN RESERVA</th>
+        <th id ="head_target">SALDOS</th>
+      </tr>
+    </thead>
+
+    {# Table body #}
+    <tbody class="font-raleway">
+      {% for entry in inventory %}
+      <tr>        
+        <td>{{ entry.get_resident }}</td>
+        <td>{{ entry.get_presentation }}</td>
+        <td id = "prescription_dosage_{{ forloop.counter }}">{{ entry.get_prescription_dosage }}</td>
+        <td id = "ammount_{{ forloop.counter }}">{{ entry.get_full_ammount }}</td>
+        <td id = "calculated_output_{{ forloop.counter }}"></td>            
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+</div>
+
+<script>
+  const table = document.getElementById('stock-datatable');
+//Cell Merge
+let headerCell = null;
+
+for (let row of table.rows) {
+  const firstCell = row.cells[0];
+  
+  if (headerCell === null || firstCell.innerText !== headerCell.innerText) {
+    headerCell = firstCell;
+  } else {
+    headerCell.rowSpan++;
+    firstCell.remove();
+  }
+}
+
+//Date and report management
+
+function generateReport(){
+  var dateStart = new Date(document.getElementById("dateStart").value);
+  var dateEnd = new Date(document.getElementById("dateEnd").value);
+  var difference = dateEnd.getTime() - dateStart.getTime();
+  var days = Math.ceil(difference / (1000 * 3600 * 24));
+  var i = 1;
+  var header = document.getElementById("head_target");
+  header.innerText ="SALDOS PARA "+days+" DIA";
+  for (let row of table.rows) {
+    var output = document.getElementById("calculated_output_"+i);
+    var arr_daily_dosage = document.getElementById("prescription_dosage_"+i).innerText.split(' ');
+    var daily_dosage = arr_daily_dosage[0];
+    var arr_ammount = document.getElementById("ammount_"+i).innerText.split(' ');
+    var ammount = arr_ammount[0];
+    text = calculateDuration(days,daily_dosage,ammount)
+    output.innerText = text+" "+arr_ammount[1];
+    console.log(ammount+" "+daily_dosage);
+    i++;    
+  }
+
+function calculateDuration(days,dosage,ammount){
+  dosage = dosage*days;
+  return ammount - dosage;
+}
+
+  
+
+
+
+}
+
+</script>
+
+<style>
+  table, tr, td {
+    border: solid 2px black;
+  }
+</style>
+
+{% endblock %}

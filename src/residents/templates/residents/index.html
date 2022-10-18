@@ -22,7 +22,9 @@
   {# Action buttons #}
   <div class="flex gap-3">
     <a href="{% url 'residents:new' %}" class="btn btn-primary">NUEVO RESIDENTE</a>
+    <a href="{% url 'residents:new' %}" class="btn btn-primary">GENERAR REPORTE DE INVENTARIO</a>
   </div>
+
 
   {# Residents table, rendered using datatables (js) #}
   <table id="residents-datatable" class="display compact">

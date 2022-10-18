@@ -75,6 +75,11 @@
                 MEDICAMENTOS
               </a>
             </li>
+            <li class="nav-item {% if 'stock' in app_names %}active{% endif %}">
+              <a href="{% url 'stock:index'%}" class="text-lg font-raleway">
+                INVENTARIOS
+              </a>
+            </li>
             {% endwith %}
           </ul>
         </div>

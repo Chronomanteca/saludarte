@@ -55,6 +55,7 @@ $(document).ready(function () {
 // Clone form (to dynamically add forms)
 $(document).ready(function () {
   // create_medication.html -> add presentation form
+ 
   $("#add_presentation").on("click", function () {
     const selector = "#forms_container:last";
     const type = "form";
@@ -69,7 +70,7 @@ $(document).ready(function () {
       var name = $(this)
         .attr("name")
         .replace("-" + (total - 1) + "-", "-" + total + "-");
-      var id = "id_" + name;
+      var id = "id_" + name;      
       $(this).attr({ name: name, id: id }).val("").removeAttr("checked");
     });
     newElement.find("label").each(function () {
@@ -80,6 +81,9 @@ $(document).ready(function () {
     });
     total++;
     $("#id_" + type + "-TOTAL_FORMS").val(total);
+    console.log(newElement);
     $(selector).after(newElement);
   }
 });
+
+

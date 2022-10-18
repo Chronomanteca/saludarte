@@ -11,7 +11,7 @@ from django.views.generic import (
     DeleteView,
 )
 
-from .models import Resident, Prescription, Presentation
+from .models import Resident
 
 
 class OnlyAccessMySiteResidentsMixin(UserPassesTestMixin):
@@ -78,15 +78,14 @@ class DetailResidentView(
 
     paginate_by = 1
     template_name = "residents/detail_resident.html"
-
+    
     def get_queryset(self):
         resident = get_object_or_404(Resident, pk=self.kwargs["pk"])
-
         return [
             resident,
-            resident.relative_set.all().order_by("kinship"),
+            resident.relative_set.all().order_by("kinship"),    
             resident.prescription_set.all(),
-            resident,
+            resident.medicationinventory_set.all(),
         ]
 
 

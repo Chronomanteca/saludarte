@@ -14,7 +14,6 @@ from django.forms import modelform_factory, modelformset_factory
 
 from .models import Medication, Presentation
 
-
 class MedicationsIndexView(LoginRequiredMixin, ListView):
     """
     It shows a list of all the medications in the database.
@@ -23,13 +22,13 @@ class MedicationsIndexView(LoginRequiredMixin, ListView):
     - Edit an existing medication
     - Delete an existing medication
     """
-
-    model = Medication
+    model = Medication    
     context_object_name = "medications"
     template_name = "medications/index.html"
 
 
 def create_medication(request):
+    
     """
     It shows a form to create a new medication.
     It does so by rendering two forms:

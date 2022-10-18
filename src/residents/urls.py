@@ -43,14 +43,21 @@ urlpatterns = [
     # name: residents:new_prescription, path: /residentes/<pk>/nueva_prescripcion/
     path(
         "<int:pk>/nueva_prescripcion/",
-        prescription_views.NewPrescriptionView,
+        prescription_views.create_prescription,
         name="new_prescription",
     ),
 
-    # name: residents:create_report, path: /residentes/<pk>/create_report/    
+    # name: residents:delete_prescription, path: /residentes/<pk>/eliminar_prescripcion/
     path(
-        "<int:pk>/crear_reporte/",
-        inventory_views.CreateReport.as_view(),
-        name="create_report",
+        "<int:pk>/eliminar_prescripcion/<int:prescription_pk>/",
+        prescription_views.DeletePrescriptionView.as_view(),
+        name="delete_prescription",
+    ),
+
+    # name: residents:new_inventory_entry, path: /residentes/<pk>/nueva_entrada_inventario/    
+    path(
+        "<int:pk>/nueva_entrada_inventario/",
+        inventory_views.NewInventoryEntry.as_view(),
+        name="new_inventory_entry",
     ),
 ]

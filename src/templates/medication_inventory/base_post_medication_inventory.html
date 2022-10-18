@@ -1,11 +1,18 @@
 {% extends "layouts/base_authenticated.html" %}
-{% load static %}
 {% load form_extras %}
 
 {% block body %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js" integrity="sha512-2ImtlRlf2VVmiGZsjm9bEyhjGW4dU7B6TNwh/hx/iSByxNENtj3WVE6o/9Lj4TJeVXPi4bnOIMXFIJJAeufa0A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" integrity="sha512-nMNlpuaDPrqlEls3IX/Q56H36qvBASwb3ipuo3MxeWbsQB1881ox0cRv7UPTgBlriqoynt35KjEwgGUeUXIPnw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<script>
+  $(document).ready(function(){
+    $('#presentation_select').select2();  
+    $('#responsible_select').select2();  
+  });
+</script>
 
 <div class="flex flex-col gap-4 mx-auto">
-
   {# Page header #}
   <h1 class="text-4xl text-center self-center font-raleway font-medium text-slate-800">
     {% block page_header %}{% endblock %}
@@ -13,16 +20,110 @@
 
   {# Form #}
   <form class="flex flex-col gap-4" method="post" action="">
-    {% csrf_token %}    
+    {% csrf_token %}
+    
+    {# Presentation #}
+    {% with field=form|get_fields:"presentation"|first %}
+    <div class="flex flex-col gap-2"> 
+      <div class="text-lg leading-4 font-bold font-raleway text-slate-800">PRESENTACION</div>
+        <select name="{{ field.html_name }}" id="presentation_select" class="w-full px-2 py-3 border rounded-md font-roboto bg-white border-slate-800">
+          {%for presentation in presentation_set%}
+          <option value = "{{presentation.id}}">{{presentation}}</option>
+          {% endfor %}
+        </select>
+    
+      {% if field.errors %}
+      <div class="message error w-full leading-3 text-sm">{{ field.errors|first }}</div>
+      {% endif %}
+    </div>
+    {%endwith%}  
 
-    {# Action buttons #}
+    {# ammount #}
+    {% with field=form|get_fields:"ammount"|first %}
+    <div class="flex flex-col gap-2">
+      <div class="text-lg uppercase font-bold leading-4 font-raleway  text-slate-800">{{ field.label }}</div>
+      <div class="form-group custom-input p-2 border rounded-md border-slate-800">
+        <input type="text" name="{{ field.html_name }}" id="{{ field.auto_id }}" placeholder="{{ field.label }}"
+          class="form-control input-text font-roboto" {% if field.value %}value="{{ field.value }}" {% endif %} />          
+      </div>
+    
+      {% if field.errors %}
+      <div class="message error w-full leading-3 text-sm">{{ field.errors|first }}</div>
+      {% endif %}
+    </div>
+    {%endwith%} 
+    
+    {# ammount Units  #}
+    {% with field=form|get_fields:"delivery_units"|first %}
+    <div class="flex flex-col gap-2">
+      <div class="text-lg uppercase font-bold leading-4 font-raleway  text-slate-800">{{ field.label }}
+        <select name="{{ field.html_name }}" id="{{ field.auto_id }}"
+              class="w-full px-2 py-3 border rounded-md font-roboto bg-white border-slate-800">
+              {% for value, text in field.field.choices %}
+              <option value {% if value %}="{{ value }}" {% endif %}
+                {% if value|to_int == field.value|to_int %}selected{% endif %}>
+                {{ text }}
+              </option>
+              {% endfor %}
+            </select>        
+      </div>    
+    
+      {% if field.errors %}
+      <div class="message error w-full leading-3 text-sm">{{ field.errors|first }}</div>
+      {% endif %}
+    </div>
+    {%endwith%}
+
+    {# Responsible #}
+    {% with field=form|get_fields:"responsible"|first %}
+    <div class="flex flex-col gap-2"> 
+      <div class="text-lg leading-4 font-bold font-raleway text-slate-800">RESPONSABLE DE LA ENTREGA</div>
+        <select name="{{ field.html_name }}" id="responsible_select" class="w-full px-2 py-3 border rounded-md font-roboto bg-white border-slate-800">
+          {%for relative in relatives%}
+          <option value = "{{relative.id}}">{{relative}}</option>
+          {% endfor %}
+        </select>
+    
+      {% if field.errors %}
+      <div class="message error w-full leading-3 text-sm">{{ field.errors|first }}</div>
+      {% endif %}
+    </div>
+    {%endwith%}  
+
+    {# Date Delivery #}
+    {% with field=form|get_fields:"date_delivery"|first %}
+    <div class="flex flex-col gap-2">
+      <div class="text-lg uppercase font-bold leading-4 font-raleway  text-slate-800">{{ field.label }}</div>
+      <div class="form-group custom-input p-2 border rounded-md border-slate-800">
+        <input type="date" name="{{ field.html_name }}" id="{{ field.auto_id }}" placeholder="{{ field.label }}"
+          class="form-control input-text font-roboto" {% if field.value %}value="{{ field.value }}" {% endif %} />          
+      </div>
+    
+      {% if field.errors %}
+      <div class="message error w-full leading-3 text-sm">{{ field.errors|first }}</div>
+      {% endif %}
+    </div>
+    {%endwith%} 
+
+    {# comments #}
+    {% with field=form|get_fields:"comentarios"|first %}
+    <div class="flex flex-col gap-2">
+      <div class="text-lg uppercase font-bold leading-4 font-raleway  text-slate-800">{{ field.label }}</div>
+      <div class="form-group custom-input p-2 border rounded-md border-slate-800">
+        <input type="text" name="{{ field.html_name }}" id="{{ field.auto_id }}" placeholder="{{ field.label }}"
+          class="form-control input-text font-roboto" {% if field.value %}value="{{ field.value }}" {% endif %} />          
+      </div>
+    
+      {% if field.errors %}
+      <div class="message error w-full leading-3 text-sm">{{ field.errors|first }}</div>
+      {% endif %}
+    </div>
+    {%endwith%}     
+    
     <div class="flex gap-3">
       <input class="btn btn-primary" type="submit" value="GUARDAR" />
       <a href="{% url 'residents:index' %}" class="btn btn-primary">CANCELAR</a>
     </div>
-
   </form>
-
+  {%endblock%}
 </div>
-
-{% endblock %}
