@@ -11,7 +11,13 @@ from django.views.generic import (
     DeleteView,
 )
 
-from .models import Resident
+from django.db.models import Sum
+from django.db.models.functions import Replace
+from django.db.models import Value, F
+
+from .models import MedicationInventory, Resident
+from medications.models import Presentation
+
 
 
 class OnlyAccessMySiteResidentsMixin(UserPassesTestMixin):
@@ -46,6 +52,7 @@ class ResidentsIndexView(LoginRequiredMixin, ListView):
     context_object_name = "residents"
     template_name = "residents/index.html"
 
+
     def get_queryset(self):
         """
         Returns all the residents in the database that match
@@ -78,14 +85,36 @@ class DetailResidentView(
 
     paginate_by = 1
     template_name = "residents/detail_resident.html"
+
+    def get_context_data(self, **kwargs):
+        context = super(DetailResidentView, self).get_context_data(**kwargs) # get the default context data
+        resident = get_object_or_404(Resident, pk=self.kwargs["pk"])
+        context["resident"] = resident
+        return context
     
     def get_queryset(self):
-        resident = get_object_or_404(Resident, pk=self.kwargs["pk"])
+        resident = get_object_or_404(Resident, pk=self.kwargs["pk"])        
+        #Esta consulta excluye los registros de entradas de inventarios creadas de manera automatica por la plataforma
+        entradas = MedicationInventory.objects.filter(resident = resident).exclude(comentarios = "Registro generado automaticamente por la plataforma")
+
+        totales = resident.get_inventory_info()
+
+        for t in totales:
+            name = Presentation.objects.get(pk = t.get("presentation"))
+            
+            t["presentation_name"] = name
+        
+
+
+
+        
         return [
             resident,
-            resident.relative_set.all().order_by("kinship"),    
-            resident.prescription_set.all(),
-            resident.medicationinventory_set.all(),
+            #It brings all the relatives except the placeholder account for the entity
+            resident.relative_set.exclude(first_name = "Saludarte").order_by("kinship"),    
+            resident.prescription_set.all().order_by("presentation","-date_delivery"),
+            entradas,
+            totales,
         ]
 
 

@@ -120,6 +120,9 @@ class User(AbstractBaseUser, Person, PermissionsMixin):
         blank=False,
     )
 
+    def get_full_name(self):
+        return super().get_full_name()
+
     objects = UserManager()
 
     USERNAME_FIELD = "email"

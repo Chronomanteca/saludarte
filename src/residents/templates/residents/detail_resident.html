@@ -19,7 +19,7 @@
   {# Navigation #}
   <div class="xl:absolute xl:left-0 flex flex-col max-w-fit items-start py-4 px-6 border-2 rounded-md border-slate-800">
     <h1 class="text-2xl text-left font-raleway font-medium text-slate-800">
-      Residente
+      Residente: {{resident}}
     </h1>
     <ul class="mt-1 list-decimal" type="1">
       <li class="list-inside font-raleway nav-item text-slate-800 {% if page_obj.number == 1 %}active{% endif %}">
@@ -39,6 +39,11 @@
       </li>
       <li class="list-inside font-raleway nav-item text-slate-800 {% if page_obj.number == 4 %}active{% endif %}">
         <a href="?page=4">
+          ENTRADAS DE MEDICAMENTOS
+        </a>
+      </li>
+      <li class="list-inside font-raleway nav-item text-slate-800 {% if page_obj.number == 5 %}active{% endif %}">
+        <a href="?page=5">
           INVENTARIO DE MEDICAMENTOS DEL RESIDENTE
         </a>
       </li>
@@ -271,7 +276,7 @@
 
   {% endwith %}
 
-  {# Third page: resident's medical information #}
+  {# Third page: resident's prescriptions #}
   {% elif page_obj.number == 3%}
   {% with prescriptions=page_obj|first %}
 
@@ -308,15 +313,20 @@
       <div class="prescription_item_info flex flex-col items-start gap-3 {% if forloop.counter != 1 %}hidden{% endif %}">
 
         {# Dosis + unidad #}
-        <div class="mt-2 flex flex-col">
+        <div class="grid gap-y-2 mt-2 flex flex-col">
+          <div class="text-lg leading-4 font-bold font-raleway text-slate-800">FECHA DE REGISTRO</div>
+          <div class="text-xl font-light font-roboto">{{ prescription.date_delivery }}</div>
+          <div class="text-lg leading-4 font-bold font-raleway text-slate-800">ENCARGADO DEL REGISTRO</div>
+          <div class="text-xl font-light font-roboto">{{ prescription.get_responsible.get_full_name}}</div>
           <div class="text-lg leading-4 font-bold font-raleway text-slate-800">DOSIS TOTAL</div>
           <div class="text-xl font-light font-roboto">{{ prescription.get_dosage }}  {{prescription.get_dosage_units_display}}</div>
         </div>
         {# Distribuciones #}
-        <div class="mt-2 flex flex-col">
+        <div class="mt-2 flex flex-col">          
           <div class="text-lg leading-4 font-bold font-raleway text-slate-800">DISTRIBUCIONES</div>
-        
+          
           {%for distribution in prescription.get_distributions%}
+          <hr class="my-5 h-px bg-gray-200 border-0 dark:bg-gray-700">
           <div class="mt-2 flex flex-col">
             <div class="text-xl font-light font-roboto">Hora: {{distribution.get_hora_display}} </div>
             <div class="text-xl font-light font-roboto">Dosis {{distribution.dosis_diaria}} {{prescription.get_dosage_units_display}} </div>
@@ -343,8 +353,8 @@
 
       {% for prescription in prescriptions %}
 
-     {# <a href="{% url 'residents:edit_relative' view.kwargs.pk relative.id %}"#}
-       {# class="btn btn-primary self-stretch relative_item_edit {% if forloop.counter != 1 %}hidden{% endif %}">EDITAR</a> #}
+      <a href="{% url 'residents:edit_prescription' view.kwargs.pk  prescription.id %}"
+        class="btn btn-primary self-stretch prescription_item_edit {% if forloop.counter != 1 %}hidden{% endif %}">EDITAR</a>
 
       <form action="{% url 'residents:delete_prescription' view.kwargs.pk prescription.id %}" method="post"
         onsubmit="return confirm('¿Estás seguro que deseas eliminar esta prescripicion? Esta acción es irreversible');"
@@ -367,7 +377,6 @@
     </div>
     {% endif %}
 
-
   </div>
 
   {%endwith%}
@@ -377,69 +386,99 @@
   {% with entries=page_obj|first %}
   <div class="flex flex-col gap-4">
     <div class="flex flex-wrap justify-center gap-8 px-8 py-6 border-2 rounded-md border-slate-800">
-      {# Left side: list of inentory entries #}    
+  {# Medications table, rendered using datatables (js) #}
+  <table id="medications-datatable" class="compact">
+    {# Table header #}
+    <thead>
+      <tr class="font-raleway text-slate-800">
+        <th>PRESENTACION</th>
+        <th>CANTIDAD</th> 
+        <th>ENTREGO</th>
+        <th>RECIBIO</th>
+        <th>FECHA DE RECEPCION</th> 
+        <th>COMENTARIOS</th>       
+        <th>ACCIONES</th>        
+               
+      </tr>
+    </thead>
 
-      <div class="flex flex-col items-stretch">
-
-        <h2 class="text-xl text-left font-raleway font-medium text-slate-800">
-          Inventario de medicamentos
-        </h2>
-
-        <ul class="mt-1 list-decimal" type="1">
-          {% for entry in entries %}
-          <li id="entry_{{forloop.counter0}}" class="entry_item list-inside cursor-pointer uppercase font-raleway nav-item text-slate-800 
-            {% if forloop.counter == 1 %}active{% endif %}">
-            <span onclick="selectEntry({{ forloop.counter0 }})">              
-             {{entry.get_presentation}} 
-            </span>
-          </li>
-          {% empty %}
-          <li class="list-none uppercase font-raleway text-slate-800">
-            <span>No hay Prescripciones registradas</span>
-          </li>
-          {% endfor %}
-        </ul>            
-      </div>
-      {# Right side: prescription information#}
+    {# Table body #}
+    <tbody class="font-raleway">
       {% for entry in entries %}
-      <div class="entry_item_info flex flex-col items-start gap-3 {% if forloop.counter != 1 %}hidden{% endif %}">
+      <tr>
+        <td>{{entry.presentation}}</td>   
+        <td text-align:center> {{entry.ammount}}</td>   
+        <td>{{entry.relative}}</td>
+        <td>{{entry.responsible.get_full_name}}</td>   
+        <td>{{ entry.date_delivery }}</td>
+        <td>{{ entry.comentarios }}</td>
 
-        {# cantidad #}
-        <div class="mt-2 flex flex-col">
-          <div class="text-lg leading-4 font-bold font-raleway text-slate-800">CANTIDAD</div>
-          <div class="text-xl font-light font-roboto">{{ entry.ammount }}  {{entry.get_delivery_units_display}}</div>
-        </div>
-        {# fecha de entrega#}
-        <div class="mt-2 flex flex-col">
-          <div class="text-lg leading-4 font-bold font-raleway text-slate-800">FECHA DE ENTREGA</div>
-          <div class="text-xl font-light font-roboto">{{ entry.date_delivery }}</div>
-        </div>
-        {# familiar que hizo la entrega#}
-        <div class="mt-2 flex flex-col">
-          <div class="text-lg leading-4 font-bold font-raleway text-slate-800">ENTREGADO POR </div>
-          <div class="text-xl font-light font-roboto">{{ entry.relative }}</div>
-        </div>
-        {# comentarios #}
-        <div class="mt-2 flex flex-col">
-          <div class="text-lg leading-4 font-bold font-raleway text-slate-800">COMENTARIOS </div>
-          <div class="text-xl font-light font-roboto">{{ entry.comentarios }}</div>
-        </div>
+        {# Actions #}
+        <td>
+          <div class="flex flex-wrap items-start gap-2">
+            
+            
 
-       
-      </div>
+            <a href="{% url 'residents:edit_inventory_entry' view.kwargs.pk  entry.id %}" class="btn btn-primary py-1">EDITAR</a>
 
-      
+            <form action="{% url 'residents:delete_inventory_entry' view.kwargs.pk entry.id %}" method="post"
+              onsubmit="return confirm('¿Estás seguro que deseas eliminar este medicamento? Esta acción es irreversible');">
+              {% csrf_token %}
+              <input type="submit" class="btn btn-primary py-1" value="ELIMINAR" />
+            </form>
+          </div>
+        </td>
+      </tr>
       {% endfor %}
-  
+      
+    </tbody>
+  </table>
+
+    
+  </div>
+    <div class="flex flex-wrap gap-3">
+      <a href="{% url 'residents:index' %}" class="btn btn-primary self-stretch">VOLVER</a>
+      <a href="{% url 'residents:new_inventory_entry' view.kwargs.pk %}" class="btn btn-primary self-stretch">NUEVO REGISTRO DE INVENTARIO</a>
     </div>
-  <div class="flex flex-wrap gap-3">
-    <a href="{% url 'residents:index' %}" class="btn btn-primary self-stretch">VOLVER</a>
-    <a href="{% url 'residents:new_inventory_entry' view.kwargs.pk %}" class="btn btn-primary self-stretch">NUEVO</a>
-    {# <a href="{% url 'residents:create_report' view.kwargs.pk %}" class="btn btn-primary self-stretch">ENVIAR REPORTE</a> #}
 
   
+
   {% endwith%}
-  </div>
+
+    {# fifth page: resident's total medication inventory #}
+    {% elif page_obj.number == 5%}
+    {% with inventory=page_obj|first %}
+    <div class="flex flex-col gap-4 flex-wrap justify-center gap-8 px-8 py-6 border-2 rounded-md border-slate-800">
+        <table id="medications-datatable" >
+          {# Table header #}
+          <thead>
+            <tr class="font-raleway text-slate-800">
+              <th>MEDICAMENTO</th>
+              <th>TOTAL</th>
+              <th>DOSIS DIARIA</th>
+              <th>SALIDAS SEMANALES</th>
+            </tr>
+          </thead>
+      
+          {# Table body #}
+          <tbody class="font-raleway">
+            {% for item in inventory %}
+            <tr >
+              <td >{{item.name}}</td>
+  
+              <td >{{item.total_cantidad}}</td>
+              <td >{{item.dosage}}</td>
+              <td >{{item.salidas_semanales}}</td>
+  
+              
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+  
+      </div>
+  
+    {% endwith%}
   {%endif%}
   
 
@@ -610,6 +649,12 @@
   }
 </script>
 
+<style>
+  td {
+  text-align: center;
+  vertical-align: middle;
+}
+</style>
 
 {% endblock %}
 

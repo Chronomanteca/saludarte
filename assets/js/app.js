@@ -52,6 +52,23 @@ $(document).ready(function () {
   });
 });
 
+// stock datatable
+$(document).ready(function () {
+  $("#stock-datatable").DataTable({
+    language: {
+      url: "../static/datatables.es-ES.json",
+    },
+    // Disable sorting on the 2nd and 3rd column (presentations, actions)
+    columnDefs: [
+      {
+        searchable: false,
+        orderable: false,
+        targets: [1, 2],
+      },
+    ],
+  });
+});
+
 // Clone form (to dynamically add forms)
 $(document).ready(function () {
   // create_medication.html -> add presentation form

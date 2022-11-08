@@ -19,7 +19,7 @@
   </h1>
 
   {# Form #}
-  <form class="flex flex-col gap-4" method="post" action="">
+  <form class="flex flex-col gap-4" method="post">
     {% csrf_token %}
     
     {# Presentation #}
@@ -75,7 +75,7 @@
     {%endwith%}
 
     {# Responsible #}
-    {% with field=form|get_fields:"responsible"|first %}
+    {% with field=form|get_fields:"relative"|first %}
     <div class="flex flex-col gap-2"> 
       <div class="text-lg leading-4 font-bold font-raleway text-slate-800">RESPONSABLE DE LA ENTREGA</div>
         <select name="{{ field.html_name }}" id="responsible_select" class="w-full px-2 py-3 border rounded-md font-roboto bg-white border-slate-800">

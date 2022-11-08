@@ -12,8 +12,10 @@ from django.views.generic import (
     DeleteView,
 )
 
+from django.db.models import Sum
+
 from residents.models import Resident, MedicationInventory, Prescription
-from medications.models import Medication
+from medications.models import Presentation
 
 class StockIndexView(LoginRequiredMixin, ListView):
     """
@@ -24,18 +26,38 @@ class StockIndexView(LoginRequiredMixin, ListView):
     - Delete an existing medication
     """
 
-    model = MedicationInventory
+    model = Resident
 
-    context_object_name = "inventory"
+    context_object_name = "residents"
     template_name = "stock/index.html"
 
     def get_context_data(self, **kwargs):
-        context = super(StockIndexView, self).get_context_data(**kwargs)
-        context.update({
-            'medication_inventory': MedicationInventory.objects.all(),
-            'prescriptions': Prescription.objects.all(),
-        })
+        context = super(StockIndexView, self).get_context_data(**kwargs) # get the default context data
+        entradas = MedicationInventory.objects.all()
+        residents = Resident.objects.all()
+        totales = entradas.values("presentation").annotate(total_cantidad = Sum(('ammount')))
+        for r in residents:
+            entradas = MedicationInventory.objects.filter(resident = r)
+            pres = Prescription.objects.filter(resident = r)
+            totales = entradas.values("presentation").annotate(total_cantidad = Sum(('ammount')))
+            for t in totales:          
+                name = Presentation.objects.get(pk = t.get("presentation"))
+                try:                        
+                    p = pres.filter(presentation = t.get("presentation")).latest("date_delivery")
+                    dosage = p.get_full_dosage                
+                except Prescription.DoesNotExist:
+                    dosage = 0
+                
+                stock_ammount = t.get("total_cantidad")
+                t["presentation_name"] = name
+                t["resident"] = r
+                t["stock"] = stock_ammount
+                t["dosage"] = dosage
+        
         return context
 
+
     def get_queryset(self):
-        return MedicationInventory.objects.order_by("resident")
+
+        residentes = Resident.objects.all()
+        return residentes

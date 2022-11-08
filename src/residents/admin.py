@@ -47,7 +47,9 @@ class MedicationInventoryAdmin(admin.ModelAdmin):
         "ammount",
         "delivery_units",
         "date_delivery",
-        "reporte_duracion",
+        "relative",
+        "comentarios",
+
     )
 
     @admin.display(description='Correo')
@@ -60,10 +62,6 @@ class MedicationInventoryAdmin(admin.ModelAdmin):
         # in this context, obj is the Manager instance for this line item
         return obj.get_resident()
 
-    @admin.display(description='reporte de duracion')
-    def reporte_duracion(self, obj):
-        # in this context, obj is the Manager instance for this line item
-        return obj.calculate_total_span()
 
 
 admin.site.register(Resident,ResidentAdmin)

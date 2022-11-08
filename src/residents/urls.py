@@ -46,7 +46,12 @@ urlpatterns = [
         prescription_views.create_prescription,
         name="new_prescription",
     ),
-
+    # name: residents:edit_prescription, path: /residentes/<pk>/editar_prescripcion/
+    path(
+        "<int:pk>/editar_prescripcion/<int:prescription_pk>/",
+        prescription_views.edit_prescription,
+        name="edit_prescription",
+    ),
     # name: residents:delete_prescription, path: /residentes/<pk>/eliminar_prescripcion/
     path(
         "<int:pk>/eliminar_prescripcion/<int:prescription_pk>/",
@@ -59,5 +64,25 @@ urlpatterns = [
         "<int:pk>/nueva_entrada_inventario/",
         inventory_views.NewInventoryEntry.as_view(),
         name="new_inventory_entry",
+    ),
+
+    # name: residents:inventory_entry_details, path: /residentes/entradas_inventario/<pk>
+    path(
+        "<int:pk>/entradas_inventario/<int:presentation_pk>",
+        inventory_views.InventoryEntryIndexView.as_view(),
+        name="inventory_entries",
+    ),
+    # name: residents:edit_inventory_entry, path: /residentes/<pk>/editar_entrada_inventario/
+    path(
+        "<int:pk>/editar_entrada_inventario/<int:medication_inventory_pk>/",
+        inventory_views.EditInventoryEntry.as_view(),
+        name="edit_inventory_entry",
+    ),
+
+    # name: residents:delete_inventory_entry, path: /residentes/<pk>/editar_entrada_inventario/
+    path(
+        "<int:pk>/eliminar_entrada_inventario/<int:medication_inventory_pk>/",
+        inventory_views.DeleteInventoryEntry.as_view(),
+        name="delete_inventory_entry",
     ),
 ]

@@ -49,13 +49,55 @@
 
     {# Table body #}
     <tbody class="font-raleway">
-      {% for entry in inventory %}
-      <tr>        
-        <td>{{ entry.get_resident }}</td>
-        <td>{{ entry.get_presentation }}</td>
-        <td id = "prescription_dosage_{{ forloop.counter }}">{{ entry.get_prescription_dosage }}</td>
-        <td id = "ammount_{{ forloop.counter }}">{{ entry.get_full_ammount }}</td>
-        <td id = "calculated_output_{{ forloop.counter }}"></td>            
+      {% for resident in residents %}
+      <tr>    
+        {#Resident name#}    
+        <td>{{ resident.get_full_name}}</td>
+        {#Resident Inventory presentation name#}    
+        <td>
+          <table class= "display compact">
+          {%for entry in  resident.get_inventory_info%}
+            <tr>
+              <td>
+              {{entry.name}}
+              </td>
+            </tr>
+          {%endfor%}
+          </table>
+        </td>
+        <td>
+          <table class= "display compact">
+          {%for entry in  resident.get_inventory_info%}
+            <tr>
+              <td>
+              {{entry.dosage}}
+              </td>
+            </tr>
+          {%endfor%}
+          </table>
+        </td>
+        <td>
+          <table class= "display compact">
+          {%for entry in  resident.get_inventory_info%}
+            <tr>
+              <td>
+              {{entry.total_cantidad}}
+              </td>
+            </tr>
+          {%endfor%}
+          </table>
+        </td>
+        <td>
+          <table class= "display compact">
+          {%for entry in  resident.get_inventory_info%}
+            <tr>
+              <td id = "calculated_output_1">
+              
+              </td>
+            </tr>
+          {%endfor%}
+          </table>
+        </td>
       </tr>
       {% endfor %}
     </tbody>
@@ -65,19 +107,7 @@
 
 <script>
   const table = document.getElementById('stock-datatable');
-//Cell Merge
-let headerCell = null;
 
-for (let row of table.rows) {
-  const firstCell = row.cells[0];
-  
-  if (headerCell === null || firstCell.innerText !== headerCell.innerText) {
-    headerCell = firstCell;
-  } else {
-    headerCell.rowSpan++;
-    firstCell.remove();
-  }
-}
 
 //Date and report management
 
@@ -114,10 +144,5 @@ function calculateDuration(days,dosage,ammount){
 
 </script>
 
-<style>
-  table, tr, td {
-    border: solid 2px black;
-  }
-</style>
 
 {% endblock %}

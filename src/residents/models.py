@@ -1,16 +1,17 @@
 from contextlib import nullcontext
-from django.db import models
-from django.urls import reverse_lazy
+from datetime import date, timedelta
+from email.policy import default
+
+from accounts.models import Site, User
 from core.models import Person
-from django.utils import timezone
-from accounts.models import Site
-from medications.models import Presentation
-from django.core.mail import send_mail
 from django.conf import settings
-
-from datetime import date,timedelta
-
-from accounts.models import User
+from django.core.mail import send_mail
+from django.db import models
+from django.db.models import Sum
+from django.urls import reverse_lazy
+from django.utils import timezone
+from django.core.exceptions import ObjectDoesNotExist
+from medications.models import Presentation
 
 
 class Resident(Person):
@@ -48,11 +49,46 @@ class Resident(Person):
         blank=True,
     )
 
+    """
+    Overriding onSave method so it creates a placeholder relative "Saludarte" as an auxiliary relative for certain tasks in the application
+    """
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            # This code only happens if the objects is
+            # not in the database yet. Otherwise it would
+            # have pk
+            
+
+            super(Resident, self).save(*args, **kwargs)
+            Relative(first_name="Saludarte", last_name ="Gestion", identification_type = 1,identification_number = 00000,resident = self).save()
+
     def get_full_name(self):
         return self.first_name + " " +self.last_name
 
     def __str__(self):
         return self.first_name + " " +self.last_name
+
+    #Reestructurando funcion
+    def get_inventory_info(self):
+        prescription_set = Prescription.objects.filter(resident = self)
+        inventory_entries = MedicationInventory.objects.filter(resident = self)
+        entries_total = inventory_entries.values("presentation").annotate(total_cantidad = Sum(('ammount')))
+        for e in entries_total :
+            pr = Presentation.objects.get(pk = e.get("presentation")) 
+            inv = inventory_entries.filter(presentation = e.get("presentation")).latest("date_delivery")
+            try:
+                pres = prescription_set.filter(presentation = pr).latest("date_delivery")
+            except ObjectDoesNotExist:
+                pres = Prescription(resident = self, dosage = 0, dosage_units = 0)
+                
+
+            e["name"] = pr.__str__()
+            e["dosage"] = pres.get_full_dosage()
+            e["total_cantidad"] = str(e.get("total_cantidad"))+" "+str(inv.get_delivery_unit())    
+            e["salidas_semanales"] = pres.salida_semanal()       
+
+            
+        return entries_total
 
     class Meta:
         verbose_name = "Residente"
@@ -94,6 +130,7 @@ class Relative(Person):
     kinship = models.SmallIntegerField(
         "parentesco",
         choices=KINSHIP_CHOICES,
+        default = OTHER,
         null=False,
         blank=False,
     )
@@ -153,12 +190,14 @@ FREQUENCY_UNIT_CHOICES =(
     (MONTHS,"meses"),
 )
 
+NONE = 0
 MG = 1
 ML = 2
 DROPS = 3
 MG_ML = 4
 
 PRESCRIPTION_DOSAGE_UNIT_CHOICES = (
+    (NONE,"None"),
     (MG, "mg"),
     (ML, "ml"),
     (DROPS , "gotas"),
@@ -186,6 +225,7 @@ class Prescription(models.Model):
         "unidad de dosis",
         blank =False,
         null=True,
+        default = 0,
         choices= PRESCRIPTION_DOSAGE_UNIT_CHOICES,
     )
 
@@ -205,13 +245,13 @@ class Prescription(models.Model):
         blank=False,
     )
 
-    responsible = models.TextField(
-        "encargado de registro",
-        max_length=128,
-        default = "Ninguno",
-        blank=True,
+    responsible = models.ForeignKey(
+        User,
+        verbose_name="responsable",
+        on_delete=models.CASCADE,
         null=True,
-    )
+        blank=True,
+    )  
 
     date_delivery = models.DateTimeField(
         "fecha de recepcion",
@@ -234,6 +274,11 @@ class Prescription(models.Model):
 
     def salida_semanal(self):
         return str(self.get_weekly_issues())
+
+    def get_responsible(self):
+
+        print(self.responsible.get_full_name())
+        return self.responsible
 
     def get_distributions(self):
         dist = Distribution.objects.filter(prescription = self)
@@ -259,6 +304,21 @@ class Prescription(models.Model):
     def __str__(self): 
         msg = self.resident.__str__()+" "+self.presentation.__str__()+" , administrar  "+str(self.dosage)+" "+self.get_dosage_units_display()    
         return msg
+    
+    """
+    Overriding onSave method so it creates a blank inventory entry signifying that there should be future entries for this prescription
+    """
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            # This code only happens if the objects is
+            # not in the database yet. Otherwise it would
+            # have pk
+            
+
+            super(Prescription, self).save(*args, **kwargs)
+            rel = Relative.objects.get(first_name = "Saludarte",resident = self.resident)
+            print(rel)
+            MedicationInventory(resident = self.resident, relative = rel,presentation = self.presentation, ammount = 0,comentarios = "Registro generado automaticamente por la plataforma").save()
 
 
     class Meta:
@@ -269,7 +329,7 @@ class Prescription(models.Model):
         return (
             reverse_lazy("residents:detail", kwargs={"pk": self.resident.pk})
             + "?page=3")
-
+    """
     def save(self, *args, **kwargs):
 
         resident = self.resident
@@ -278,6 +338,7 @@ class Prescription(models.Model):
         delivery_units = self.dosage_units
         MedicationInventory.objects.update_or_create(resident = resident, presentation = presentation, ammount = ammount,delivery_units = delivery_units)        
         super(Prescription, self).save(*args, **kwargs)
+    """
 
 FAST = 1
 MORNING = 2
@@ -292,15 +353,6 @@ DISTRIBUTION_HOUR_CHOICES = (
 )
 
 class Distribution(models.Model):
-
-    """
-    Aqui mover residente
-    Horario : Ayuno (a,m,t)
-    presentacionId (foranea)
-    Prescripcion X (idForanea)
-    dosis_horario (1) pastilla; (30) gotas
-    indicaciones: 2 horas antes del ayuno... 30 gotas en... (comentarios)
-    """
 
     prescription = models.ForeignKey(
         Prescription,
@@ -339,6 +391,7 @@ class Distribution(models.Model):
         return msg
 
 
+#This class actually represents an entry inside the resident's medication,
 class MedicationInventory(models.Model):
 
     """
@@ -383,7 +436,7 @@ class MedicationInventory(models.Model):
         verbose_name="familiar",
         on_delete=models.CASCADE,
         null=True,
-        blank=False,
+        blank=True,
     )
 
     presentation = models.ForeignKey(
@@ -404,6 +457,7 @@ class MedicationInventory(models.Model):
         "unidad",
         blank =False,
         null=True,
+        default = 0,
         choices= PRESCRIPTION_DOSAGE_UNIT_CHOICES,
     )  
 
@@ -427,11 +481,14 @@ class MedicationInventory(models.Model):
         verbose_name="responsable",
         on_delete=models.CASCADE,
         null=True,
-        blank=False,
+        blank=True,
     )  
 
     def get_resident(self):
         return self.resident.__str__()  
+
+    def get_delivery_unit(self):
+        return self.get_delivery_units_display()
 
     def get_prescription_dosage(self):
         pres = Prescription.objects.filter(resident = self.resident).get(presentation = self.presentation)        
@@ -446,19 +503,27 @@ class MedicationInventory(models.Model):
 
     def get_full_ammount(self):
         return str(self.ammount)+" "+self.get_delivery_units_display()
-        
 
+    def get_ammount_calculated(self):
+        entradas = MedicationInventory.objects.filter(resident = self.resident)
+
+        totales = entradas.values("presentation").annotate(total_cantidad = Sum(('ammount')))
+        print(totales)
+        return 0
+    
+    
+        
+    """
     def email(self):
         subj = "informe de duracion de medicamentos de "+self.resident.__str__()
         msg = "El Residente "+self.resident.__str__()+" tiene  "+str(self.ammount)+" "+self.get_delivery_units_display()+" de "+self.presentation.__str__()+". "+self.calculate_total_span()       
        # self.email_test(msg,subj)
         return "correo enviado"
+    """
 
 
     def __str__(self):
-        subj = "informe de duracion de medicamentos de "+self.resident.__str__()
-        msg = "El Residente "+self.resident.__str__()+" tiene  "+str(self.ammount)+" "+self.get_delivery_units_display()+" de "+self.presentation.__str__()+". "+self.calculate_total_span()       
-        #self.email_test(msg,subj)
+        msg = self.presentation.__str__()
         return msg
 
     def get_email_list(self):

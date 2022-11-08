@@ -11,5 +11,5 @@ class DistributionForm(ModelForm):
         exclude = ()
 
 DistributionFormSet = inlineformset_factory(
-    Prescription,Distribution, form = DistributionForm, extra = 1
+    Prescription,Distribution, form = DistributionForm, extra = 1, max_num = 4
 )
