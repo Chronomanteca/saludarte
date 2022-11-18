@@ -85,7 +85,12 @@ class Resident(Person):
             e["name"] = pr.__str__()
             e["dosage"] = pres.get_full_dosage()
             e["total_cantidad"] = str(e.get("total_cantidad"))+" "+str(inv.get_delivery_unit())    
-            e["salidas_semanales"] = pres.salida_semanal()       
+            e["salidas_semanales"] = pres.salida_semanal()   
+            try:
+                loan = Loan.objects.get(presentation = pr)  
+                e["deuda"] = loan.get_full_loan()
+            except ObjectDoesNotExist:
+                e["deuda"] = "0 N/A"
 
             
         return entries_total
@@ -161,7 +166,7 @@ class Relative(Person):
         Resident,
         verbose_name="familiares residentes",
         on_delete=models.CASCADE,
-        null=False,
+        null=True,
         blank=False,
     )
 
@@ -195,13 +200,24 @@ MG = 1
 ML = 2
 DROPS = 3
 MG_ML = 4
+TABLET = 5
+CAPSULE = 6
+PILL = 7
+DROPS = 8
+SYRUP = 9
+INJECTION = 10
 
 PRESCRIPTION_DOSAGE_UNIT_CHOICES = (
-    (NONE,"None"),
+    (NONE,"N/A"),
     (MG, "mg"),
     (ML, "ml"),
-    (DROPS , "gotas"),
-    (MG, "mg_ml"),
+    (MG_ML, "mg_ml"),
+    (TABLET, "Tabletas"),
+    (CAPSULE, "Cápsulas"),
+    (PILL, "Pastillas"),
+    (DROPS, "Gotas"),
+    (SYRUP, "Jarabe"),
+    (INJECTION, "Inyección"),
 
 )
 
@@ -309,17 +325,14 @@ class Prescription(models.Model):
     Overriding onSave method so it creates a blank inventory entry signifying that there should be future entries for this prescription
     """
     def save(self, *args, **kwargs):
-        if not self.pk:
             # This code only happens if the objects is
             # not in the database yet. Otherwise it would
             # have pk
             
-
             super(Prescription, self).save(*args, **kwargs)
             rel = Relative.objects.get(first_name = "Saludarte",resident = self.resident)
             print(rel)
-            MedicationInventory(resident = self.resident, relative = rel,presentation = self.presentation, ammount = 0,comentarios = "Registro generado automaticamente por la plataforma").save()
-
+            MedicationInventory(resident = self.resident, relative = rel,presentation = self.presentation, delivery_units = self.dosage_units,ammount = 0,comentarios = "Registro generado automaticamente por la plataforma").save()
 
     class Meta:
         verbose_name = "Prescripcion"
@@ -329,16 +342,7 @@ class Prescription(models.Model):
         return (
             reverse_lazy("residents:detail", kwargs={"pk": self.resident.pk})
             + "?page=3")
-    """
-    def save(self, *args, **kwargs):
-
-        resident = self.resident
-        presentation = self.presentation
-        ammount = 0
-        delivery_units = self.dosage_units
-        MedicationInventory.objects.update_or_create(resident = resident, presentation = presentation, ammount = ammount,delivery_units = delivery_units)        
-        super(Prescription, self).save(*args, **kwargs)
-    """
+    
 
 FAST = 1
 MORNING = 2
@@ -366,6 +370,7 @@ class Distribution(models.Model):
         "hora",
         choices=DISTRIBUTION_HOUR_CHOICES,
         null=False,
+        default = 1,
         blank=False,
     )
 
@@ -391,37 +396,21 @@ class Distribution(models.Model):
         return msg
 
 
+INPUT = 1
+OUTPUT=2
+LOAN=3
+LOAN_PAYMENT = 4
+
+INVENTORY_CONCEPT_CHOICES = (
+    (INPUT, "Entrada de inventario"),
+    (OUTPUT, "Salida de inventario"),
+    (LOAN, "Prestamo"),
+    (LOAN_PAYMENT, "Pago de Prestamo"),
+)
+
 #This class actually represents an entry inside the resident's medication,
 class MedicationInventory(models.Model):
 
-    """
-    1 presentacion (foreign)
-    cantidad (int)
-    comentarios (opcional)
-    fecha ingreso
-    relative
-    encargado/a
-
-    ej:
-    clonazepam 100mg pastillas
-    llegaron 30 pastillas (complementar con presentation_type) (tentativo)
-    comentarios: todo ok
-    """     
-
-    """
-    1 Inventario puede tener muchas entradas de presentaciones
-    encargado (get from user)
-    
-
-    *
-    * Corregir modulo (distribucion agregar presentacion en lugar de prescripcion)
-    * notificaciones correo
-    * viernes!!
-    * valores faltantes
-
-
-    TODO: prediccion basada en rango entre fecha inicial y fecha final
-    """
 
     resident = models.ForeignKey(
         Resident,
@@ -476,6 +465,14 @@ class MedicationInventory(models.Model):
         null=True,
     )
 
+    concept = models.SmallIntegerField(
+        "concepto",
+        blank =False,
+        null=True,
+        default = 1,
+        choices= INVENTORY_CONCEPT_CHOICES,
+    )  
+
     responsible = models.ForeignKey(
         User,
         verbose_name="responsable",
@@ -483,6 +480,11 @@ class MedicationInventory(models.Model):
         null=True,
         blank=True,
     )  
+
+    def get_date(self):
+        date_time_str = self.date_delivery.strftime("%Y-%m-%d %H:%M:%S")
+        return date_time_str
+
 
     def get_resident(self):
         return self.resident.__str__()  
@@ -511,7 +513,42 @@ class MedicationInventory(models.Model):
         print(totales)
         return 0
     
-    
+    #Overriding save function in order to check if an entry needs to pay a medication loan
+    def save(self, *args, **kwargs):
+        # This code only happens if the objects is
+        # not in the database yet. Otherwise it would
+        # have pk            
+        super(MedicationInventory, self).save(*args, **kwargs)
+        presentation = self.presentation
+        try:       
+            loan = Loan.objects.get(presentation = presentation)     
+            if self.concept == 1 and loan.ammount_loan > 0:
+                print("TENEMOS DEUDA")
+                
+                rel = Relative.objects.get(first_name = "Saludarte",resident = self.resident)
+                
+                print("ajustando deudas")
+                #decreasing ammount of debt
+                payment = loan.ammount_loan - self.ammount
+
+                if payment>0:                                       
+                    inv_comentarios = "Se usaron "+str(self.ammount)+" para pagar el prestamo de "+str(loan.ammount_loan)
+                    MedicationInventory(resident = self.resident, presentation = presentation, ammount = -self.ammount, responsible = self.responsible, relative = rel, delivery_units = self.delivery_units, concept = 4, comentarios = inv_comentarios).save()
+                    loan.ammount_loan = loan.ammount_loan - self.ammount
+                    loan.save()
+                else:
+                    new_payment = abs(payment)
+                    inv_comentarios = "Se usaron "+str(self.ammount - new_payment)+" para pagar el prestamo de "+str(loan.ammount_loan)
+                    MedicationInventory(resident = self.resident, presentation = presentation, ammount = -(self.ammount - new_payment), responsible = self.responsible, relative = rel, delivery_units = self.delivery_units, concept = 4, comentarios = inv_comentarios).save()
+                    loan.ammount_loan = 0
+                    loan.save()
+
+        except ObjectDoesNotExist:
+            print("no tengo deuda")
+
+
+
+            
         
     """
     def email(self):
@@ -569,3 +606,39 @@ class MedicationInventory(models.Model):
             reverse_lazy("residents:detail", kwargs={"pk": self.resident.pk})
             + "?page=4"
         )
+
+
+class Loan(models.Model):
+
+    resident = models.ForeignKey(
+        Resident,
+        verbose_name="residente",
+        on_delete=models.CASCADE,
+        null=False,
+        blank=False,
+    )
+
+    presentation = models.ForeignKey(
+        Presentation,
+        verbose_name="presentacion",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=False,
+    )     
+
+    ammount_loan = models.IntegerField(
+        "prestamo",
+        blank = False,
+        null=True,
+    )
+
+    loan_units = models.SmallIntegerField(
+        "unidad",
+        blank =False,
+        null=True,
+        default = 0,
+        choices= PRESCRIPTION_DOSAGE_UNIT_CHOICES,
+    )     
+
+    def get_full_loan(self):
+        return str(self.ammount_loan)+" "+self.get_loan_units_display()

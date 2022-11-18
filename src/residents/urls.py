@@ -4,6 +4,7 @@ from . import views
 from . import relative_views
 from . import prescription_views
 from . import inventory_views
+from . import pillbox_views
 
 
 app_name = "residents"
@@ -85,4 +86,13 @@ urlpatterns = [
         inventory_views.DeleteInventoryEntry.as_view(),
         name="delete_inventory_entry",
     ),
+
+    #Vista para controlar el pastillero
+    # name: residents:manage_pillbox, path: /residentes/<pk>/gestionar_pastillero/
+    path(
+        "<int:pk>/gestionar_pastillero/",
+        pillbox_views.manage_pillbox,
+        name="manage_pillbox",
+    ),
+
 ]

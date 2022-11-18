@@ -57,6 +57,7 @@ class NewInventoryEntry(
         "presentation",
         "relative",
         "ammount",
+        "concept",
         "delivery_units",
         "date_delivery",
         "comentarios",
@@ -75,7 +76,7 @@ class NewInventoryEntry(
 
         context = super().get_context_data(**kwargs)
         context["presentation_set"] = Presentation.objects.all()
-        context["relatives"] = Relative.objects.filter(resident_id = r.id)
+        context["relatives"] = Relative.objects.filter(resident_id = r.id)        
         return context
 
     def get_success_url(self):
@@ -101,6 +102,7 @@ class EditInventoryEntry(
         "presentation",
         "relative",
         "ammount",
+        "concept",
         "delivery_units",
         "date_delivery",
         "comentarios",        

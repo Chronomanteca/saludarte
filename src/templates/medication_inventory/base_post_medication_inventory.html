@@ -73,6 +73,7 @@
       {% endif %}
     </div>
     {%endwith%}
+    
 
     {# Responsible #}
     {% with field=form|get_fields:"relative"|first %}
@@ -90,20 +91,26 @@
     </div>
     {%endwith%}  
 
-    {# Date Delivery #}
-    {% with field=form|get_fields:"date_delivery"|first %}
+    {# Concept  #}
+    {% with field=form|get_fields:"concept"|first %}
     <div class="flex flex-col gap-2">
-      <div class="text-lg uppercase font-bold leading-4 font-raleway  text-slate-800">{{ field.label }}</div>
-      <div class="form-group custom-input p-2 border rounded-md border-slate-800">
-        <input type="date" name="{{ field.html_name }}" id="{{ field.auto_id }}" placeholder="{{ field.label }}"
-          class="form-control input-text font-roboto" {% if field.value %}value="{{ field.value }}" {% endif %} />          
-      </div>
+      <div class="text-lg uppercase font-bold leading-4 font-raleway  text-slate-800">{{ field.label }}
+        <select name="{{ field.html_name }}" id="{{ field.auto_id }}"
+              class="w-full px-2 py-3 border rounded-md font-roboto bg-white border-slate-800">
+              {% for value, text in field.field.choices %}
+              <option value {% if value %}="{{ value }}" {% endif %}
+                {% if value|to_int == field.value|to_int %}selected{% endif %}>
+                {{ text }}
+              </option>
+              {% endfor %}
+            </select>        
+      </div>    
     
       {% if field.errors %}
       <div class="message error w-full leading-3 text-sm">{{ field.errors|first }}</div>
       {% endif %}
     </div>
-    {%endwith%} 
+    {%endwith%}    
 
     {# comments #}
     {% with field=form|get_fields:"comentarios"|first %}

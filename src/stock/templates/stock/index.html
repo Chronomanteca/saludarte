@@ -30,12 +30,12 @@
     <p>Fecha final</p>
     <input type="date" id="dateEnd" class="form-control input-text font-roboto"/>
   </div>  
-    <button onclick="generateReport()" id="btn_generate_report" class="btn btn-primary">CALCULAR SALDOS</button>
+    <button onclick="handle_dates()" id="btn_generate_report" class="btn btn-primary">CALCULAR SALDOS</button>
+    <button onclick="printReport()" id="btn_generate_report" class="btn btn-primary">IMPRIMIR REPORTE</button>
   </div>
 
-
   {# Residents table, rendered using datatables (js) #}
-  <table id="stock-datatable" class="display compact">
+  <table id="stock-datatable" class="display compact nowrap">
     {# Table header #}
     <thead>
       <tr class="font-raleway text-slate-800">
@@ -52,10 +52,10 @@
       {% for resident in residents %}
       <tr>    
         {#Resident name#}    
-        <td>{{ resident.get_full_name}}</td>
+        <td id = "resident_{{forloop.counter}}">{{ resident.get_full_name}}</td>
         {#Resident Inventory presentation name#}    
         <td>
-          <table class= "display compact">
+          <table class= "display compact nowrap cell-border">
           {%for entry in  resident.get_inventory_info%}
             <tr>
               <td>
@@ -65,33 +65,36 @@
           {%endfor%}
           </table>
         </td>
+        {#Resident prescription dosage#}
         <td>
-          <table class= "display compact">
+          <table id = "table_dosage_{{forloop.counter}}" class= " nowrap cell-border">
           {%for entry in  resident.get_inventory_info%}
             <tr>
-              <td>
+              <td id = "dosage_{{forloop.counter}}">
               {{entry.dosage}}
               </td>
             </tr>
           {%endfor%}
           </table>
         </td>
+        {#Resident Inventory Total#}
         <td>
-          <table class= "display compact">
+          <table id ="table_totals_{{forloop.counter}}" class= "display compact nowrap  cell-border">
           {%for entry in  resident.get_inventory_info%}
             <tr>
-              <td>
+              <td id = "total_{{forloop.counter}}">
               {{entry.total_cantidad}}
               </td>
             </tr>
           {%endfor%}
           </table>
         </td>
+        {#Resident Predicted ammount#}
         <td>
-          <table class= "display compact">
+          <table id = "table_target_{{forloop.counter}}" class= "display compact nowrap cell-border">
           {%for entry in  resident.get_inventory_info%}
             <tr>
-              <td id = "calculated_output_1">
+              <td id = "output_{{forloop.counter}}">
               
               </td>
             </tr>
@@ -107,42 +110,103 @@
 
 <script>
   const table = document.getElementById('stock-datatable');
+  const idDosage = 2;
+  const idTotal = 3;
+  const idTarget = 4
 
 
 //Date and report management
 
-function generateReport(){
+
+
+function handle_dates(){
   var dateStart = new Date(document.getElementById("dateStart").value);
   var dateEnd = new Date(document.getElementById("dateEnd").value);
   var difference = dateEnd.getTime() - dateStart.getTime();
   var days = Math.ceil(difference / (1000 * 3600 * 24));
-  var i = 1;
-  var header = document.getElementById("head_target");
-  header.innerText ="SALDOS PARA "+days+" DIA";
-  for (let row of table.rows) {
-    var output = document.getElementById("calculated_output_"+i);
-    var arr_daily_dosage = document.getElementById("prescription_dosage_"+i).innerText.split(' ');
-    var daily_dosage = arr_daily_dosage[0];
-    var arr_ammount = document.getElementById("ammount_"+i).innerText.split(' ');
-    var ammount = arr_ammount[0];
-    text = calculateDuration(days,daily_dosage,ammount)
-    output.innerText = text+" "+arr_ammount[1];
-    console.log(ammount+" "+daily_dosage);
-    i++;    
+  console.log(days)
+  if(Number.isNaN(days)){
+    alert("Inserte una fecha inicial y final");
   }
+  else if(days<0){
+    alert("Error, la fecha inicial supera la fecha final");
+  }
+  else{
+    var word = "DIAS";
+    if(days == 0){
+      var word = "DIA";
+    }
+    generateReport(days,word)
+    }
+    
+  }
+
+
+
+
+function generateReport(days,word){
+  var header = document.getElementById("head_target");
+  header.innerText ="SALDOS PARA "+" "+word;
+
+
+  for(let i = 1, row; row = table.rows[i]; i++){
+
+    var idTableDosage = "table_dosage_"+i;
+    var tableDosage = document.getElementById(idTableDosage).getElementsByTagName("tr");
+    
+
+
+    var tableTotal = document.getElementById("table_totals_"+i).getElementsByTagName("tr");
+    var tableTarget = document.getElementById("table_target_"+i).getElementsByTagName("tr");
+
+
+    for(let j =0; j<tableTarget.length;j++){
+      console.log(tableTarget.item(j));
+      var total = tableTotal.item(j).innerText.split(' ')[0];
+      var daily = tableDosage.item(j).innerText.split(' ')[0];
+
+      if(tableDosage.item(j).innerText.split(' ')[1]!="None"){
+        var unit =  tableDosage.item(j).innerText.split(' ')[1];
+      }
+      else{
+        var unit =  tableTotal.item(j).innerText.split(' ')[1];
+      }
+      
+      var calculated = total- (daily*days);
+
+      var msg = formatCalculation(calculated,unit)
+      tableTarget.item(j).innerText = msg;
+      
+    }
+  }
+
+}
+
+function printReport(){  
+  print()
+}
+
+function formatCalculation(ammount, unit){
+  if(ammount>0){
+    return "Sobraran "+ammount+" "+unit+" del inventario";
+  }
+  else if(ammount<0){
+    return "Faltaran "+Math.abs(ammount)+" "+unit+" del inventario";
+  }
+  else
+  return "Se acabara todo el inventario"
+
+}
 
 function calculateDuration(days,dosage,ammount){
   dosage = dosage*days;
   return ammount - dosage;
 }
 
-  
-
-
-
-}
 
 </script>
+
+
 
 
 {% endblock %}

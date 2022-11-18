@@ -52,21 +52,35 @@ $(document).ready(function () {
   });
 });
 
-// stock datatable
-$(document).ready(function () {
-  $("#stock-datatable").DataTable({
-    language: {
-      url: "../static/datatables.es-ES.json",
+// pillbox datatable
+$("#pillbox-datatable").DataTable({
+  language: {
+    url: "../static/datatables.es-ES.json",
+  },
+  // Disable sorting on the 2nd and 3rd column (presentations, actions)
+  columnDefs: [
+
+    { 
+      "witdh": "1%",
+      "targets": 0,
     },
-    // Disable sorting on the 2nd and 3rd column (presentations, actions)
-    columnDefs: [
-      {
-        searchable: false,
-        orderable: false,
-        targets: [1, 2],
-      },
-    ],
-  });
+  ],
+});
+
+
+// stock datatable
+$("#stock-datatable").DataTable({
+  language: {
+    url: "../static/datatables.es-ES.json",
+  },
+  // Disable sorting on the 2nd and 3rd column (presentations, actions)
+  columnDefs: [
+
+    { 
+      "witdh": "1%",
+      "targets": 0,
+    },
+  ],
 });
 
 // Clone form (to dynamically add forms)

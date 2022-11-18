@@ -44,7 +44,7 @@
       </li>
       <li class="list-inside font-raleway nav-item text-slate-800 {% if page_obj.number == 5 %}active{% endif %}">
         <a href="?page=5">
-          INVENTARIO DE MEDICAMENTOS DEL RESIDENTE
+          INVENTARIO DE MEDICAMENTOS
         </a>
       </li>
     </ul>
@@ -396,6 +396,7 @@
         <th>ENTREGO</th>
         <th>RECIBIO</th>
         <th>FECHA DE RECEPCION</th> 
+        <th>CONCEPTO</th>   
         <th>COMENTARIOS</th>       
         <th>ACCIONES</th>        
                
@@ -403,14 +404,16 @@
     </thead>
 
     {# Table body #}
+    
     <tbody class="font-raleway">
       {% for entry in entries %}
       <tr>
         <td>{{entry.presentation}}</td>   
-        <td text-align:center> {{entry.ammount}}</td>   
+        <td > {{entry.ammount}} {{entry.get_delivery_unit}}</td>   
         <td>{{entry.relative}}</td>
         <td>{{entry.responsible.get_full_name}}</td>   
-        <td>{{ entry.date_delivery }}</td>
+        <td>{{ entry.get_date }}</td>
+         <td>{{ entry.get_concept_display }}</td>
         <td>{{ entry.comentarios }}</td>
 
         {# Actions #}
@@ -448,38 +451,53 @@
     {# fifth page: resident's total medication inventory #}
     {% elif page_obj.number == 5%}
     {% with inventory=page_obj|first %}
+    <div class="flex flex-col gap-4">
     <div class="flex flex-col gap-4 flex-wrap justify-center gap-8 px-8 py-6 border-2 rounded-md border-slate-800">
+      
+        {% csrf_token %}
         <table id="medications-datatable" >
           {# Table header #}
           <thead>
             <tr class="font-raleway text-slate-800">
               <th>MEDICAMENTO</th>
               <th>TOTAL</th>
+              <th>DEUDA</th>
               <th>DOSIS DIARIA</th>
               <th>SALIDAS SEMANALES</th>
             </tr>
           </thead>
       
           {# Table body #}
+
           <tbody class="font-raleway">
             {% for item in inventory %}
             <tr >
               <td >{{item.name}}</td>
   
               <td >{{item.total_cantidad}}</td>
+              <td >{{item.deuda}}</td>
               <td >{{item.dosage}}</td>
-              <td >{{item.salidas_semanales}}</td>
+              <td>{{item.salidas_semanales}}</td>
   
               
             </tr>
             {% endfor %}
-          </tbody>
+          </tbody>        
         </table>
-  
       </div>
+      <div class="flex flex-wrap gap-3">
+        <a href="{% url 'residents:manage_pillbox' view.kwargs.pk %}" class="btn btn-primary self-stretch">ADMINISTRAR PASTILLERO</a>
+      </div>      
+
+    </div>
   
     {% endwith%}
+    
   {%endif%}
+
+  
+
+  
   
 
 </div>

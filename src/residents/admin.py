@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Resident, Relative, MedicationInventory, Prescription, Distribution
+from .models import Resident, Relative, MedicationInventory, Prescription, Distribution,Loan
 
 # Register your models here.
 
@@ -14,13 +14,7 @@ class ResidentAdmin(admin.ModelAdmin):
         "eps",     
     )
 
-class RelativeAdmin(admin.ModelAdmin):
-    list_display = (        
-        "first_name",
-        "last_name",
-        "kinship",  
-        "resident",
-    )
+
 
 class PrescriptionAdmin(admin.ModelAdmin):
     list_display = (   
@@ -65,7 +59,8 @@ class MedicationInventoryAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Resident,ResidentAdmin)
-admin.site.register(Relative,RelativeAdmin)
+admin.site.register(Relative)
+admin.site.register(Loan)
 admin.site.register(Prescription)
 admin.site.register(MedicationInventory,MedicationInventoryAdmin)
 admin.site.register(Distribution)

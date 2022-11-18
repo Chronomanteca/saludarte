@@ -60,6 +60,8 @@ class ResidentsIndexView(LoginRequiredMixin, ListView):
         then it returns all the residents in the database.
         """
 
+        print("testing")
+
         if self.request.user.site.id == 1:
             return Resident.objects.all()
 
@@ -86,6 +88,7 @@ class DetailResidentView(
     paginate_by = 1
     template_name = "residents/detail_resident.html"
 
+
     def get_context_data(self, **kwargs):
         context = super(DetailResidentView, self).get_context_data(**kwargs) # get the default context data
         resident = get_object_or_404(Resident, pk=self.kwargs["pk"])
@@ -104,8 +107,6 @@ class DetailResidentView(
             
             t["presentation_name"] = name
         
-
-
 
         
         return [

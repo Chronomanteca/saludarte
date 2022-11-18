@@ -1,0 +1,48 @@
+{% extends "layouts/base_authenticated.html" %}
+{% load static %}
+{% load form_extras %}
+
+{%block body%}
+
+<div class="container flex flex-col gap-4 mx-auto">
+<div class="flex flex-col gap-4 flex-wrap justify-center gap-8 px-8 py-6 border-2 rounded-md border-slate-800">
+    <form method = "post">
+    {% csrf_token %}
+    <table id="pillbox-datatable" >
+      {# Table header #}
+      <thead>
+        <tr class="font-raleway text-slate-800">
+          <th>MEDICAMENTO</th>
+          <th>TOTAL</th>
+          <th>DOSIS DIARIA</th>
+          <th>SALIDAS SEMANALES</th>
+        </tr>
+      </thead>
+  
+      {# Table body #}
+
+      <tbody class="font-raleway">
+        {% for item in inventory %}        
+        <tr >          
+          <input hidden name = "presentation_id_{{forloop.counter}}" type = "text" value = {{item.presentation}}/>
+          <td >{{item.name}}</td>
+          <td > <input hidden name = "ammount_{{forloop.counter}}" type = "text" value = {{item.total_cantidad}}/> {{item.total_cantidad}}</td>
+          <td>  {{item.dosage}}</td>
+          <td><input name = "output_{{forloop.counter}}" type = "text" class = "w-24 text-right " value = {{item.salidas_semanales}}/> mg_ml</td>
+
+          
+        </tr>
+        {% endfor %}
+      </tbody>        
+    </table>
+  </div>
+  <div class="flex gap-3">
+    <input class="btn btn-primary" type="submit" value="GUARDAR" />
+    <a href="{% url 'residents:index' %}" class="btn btn-primary">CANCELAR</a>
+  </div>
+  
+</form>
+
+</div>
+
+{%endblock%}
