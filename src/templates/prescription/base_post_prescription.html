@@ -4,6 +4,14 @@
 
 {% block body %}
 
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js" integrity="sha512-2ImtlRlf2VVmiGZsjm9bEyhjGW4dU7B6TNwh/hx/iSByxNENtj3WVE6o/9Lj4TJeVXPi4bnOIMXFIJJAeufa0A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" integrity="sha512-nMNlpuaDPrqlEls3IX/Q56H36qvBASwb3ipuo3MxeWbsQB1881ox0cRv7UPTgBlriqoynt35KjEwgGUeUXIPnw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<script>
+  $(document).ready(function(){
+    $('#presentation_select').select2();    
+  });
+</script>
 
 <div class="flex flex-col gap-4 mx-auto">
   {# Page header #}
@@ -19,7 +27,7 @@
     {# Presentation #}
     {% with field=prescription_form|get_fields:"presentation"|first %}
     <div class="flex flex-col gap-2"> 
-      <div class="text-lg leading-4 font-bold font-raleway text-slate-800">PRESENTACION</div>
+      <div class="text-lg leading-4 font-bold font-raleway text-slate-800">PRESENTACIÓN</div>
         <select name="{{ field.html_name }}" id="presentation_select" class="w-full px-2 py-3 border rounded-md font-roboto bg-white border-slate-800">
           {%for presentation in presentation_set%}
           <option value = "{{presentation.id}}">{{presentation}}</option>
@@ -76,7 +84,7 @@
       <thead>
         <tr class="text-left text-base font-raleway text-slate-800">
           <th><span style="font-weight:normal;">HORA</span></th>
-          <th><span style="font-weight:normal;">DOSIS DISTRIBUCION</span></th>
+          <th><span style="font-weight:normal;">DOSIS DISTRIBUCIÓN</span></th>
           <th><span style="font-weight:normal;">COMENTARIOS</span></th>
         </tr>
       </thead>
@@ -180,7 +188,11 @@
 
 </div>
 {%block script%}
-
+{%comment%}
+NOTA IMPORTANTE: Los scripts que estan abajo de este comentario moverse a un archivo estatico en assets->static.
+ se dejo aqui debido a que django presenta inconvenientes
+en algunos navegadores a la hora de cargar archivos estaticos.
+{%endcomment%}
 <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
 <script > 
   /**
@@ -440,7 +452,7 @@
 </script>
 <script type="text/javascript">
     $('.formset_row').formset({
-        addText: 'AGREGAR DISTRIBUCION',
+        addText: 'AGREGAR DISTRIBUCIÓN',
         deleteText: 'ELIMINAR',
         prefix: 'distribution_set',
         

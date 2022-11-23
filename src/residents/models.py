@@ -63,7 +63,7 @@ class Resident(Person):
             super(Resident, self).save(*args, **kwargs)                   
             Relative(first_name="Saludarte", last_name ="Gestion", identification_type = 1,identification_number = 00000,resident = self).save()
         else:
-            print("Residente ya existia, solo se esta editando")
+            print("Residente ya existía, solo se esta editando")
             super(Resident, self).save(*args, **kwargs) 
 
     def get_full_name(self):
@@ -195,7 +195,7 @@ WEEKS = 3
 MONTHS = 4
 FREQUENCY_UNIT_CHOICES =(
     (HOURS,"horas"),
-    (DAYS,"dias"),
+    (DAYS,"días"),
     (WEEKS,"semanas"),
     (MONTHS,"meses"),
 )
@@ -260,7 +260,7 @@ class Prescription(models.Model):
 
     presentation = models.ForeignKey(
         Presentation,
-        verbose_name="presentacion",
+        verbose_name="presentación",
         on_delete=models.CASCADE,
         null=False,
         blank=False,
@@ -275,7 +275,7 @@ class Prescription(models.Model):
     )  
 
     date_delivery = models.DateTimeField(
-        "fecha de recepcion",
+        "fecha de recepción",
         default=timezone.now,
         blank=True,
         null=True,
@@ -340,7 +340,7 @@ class Prescription(models.Model):
             MedicationInventory(resident = self.resident, relative = rel,presentation = self.presentation, delivery_units = self.dosage_units,ammount = 0,comentarios = "Registro generado automaticamente por la plataforma").save()
 
     class Meta:
-        verbose_name = "Prescripcion"
+        verbose_name = "Prescripción"
         verbose_name_plural = "Prescripciones"
 
     def get_absolute_url(self):
@@ -365,7 +365,7 @@ class Distribution(models.Model):
 
     prescription = models.ForeignKey(
         Prescription,
-        verbose_name="prescripcion",
+        verbose_name="prescripción",
         on_delete=models.CASCADE,
         null=False,
         blank=False,
@@ -392,7 +392,7 @@ class Distribution(models.Model):
     )  
 
     class Meta:
-        verbose_name = "Distribucion"
+        verbose_name = "Distribución"
         verbose_name_plural = "Distribuciones"   
 
     def __str__(self):
@@ -409,8 +409,8 @@ LOAN_PAYMENT = 4
 INVENTORY_CONCEPT_CHOICES = (
     (INPUT, "Entrada de inventario"),
     (OUTPUT, "Salida de inventario"),
-    (LOAN, "Prestamo"),
-    (LOAN_PAYMENT, "Pago de Prestamo"),
+    (LOAN, "Préstamo"),
+    (LOAN_PAYMENT, "Pago de Préstamo"),
 )
 
 #This class actually represents an entry inside the resident's medication,
@@ -435,7 +435,7 @@ class MedicationInventory(models.Model):
 
     presentation = models.ForeignKey(
         Presentation,
-        verbose_name="presentacion",
+        verbose_name="presentación",
         on_delete=models.CASCADE,
         null=True,
         blank=False,
@@ -456,7 +456,7 @@ class MedicationInventory(models.Model):
     )  
 
     date_delivery = models.DateTimeField(
-        "fecha de recepcion",
+        "fecha de recepción",
         default=timezone.now,
         blank=True,
         null=True,
@@ -465,7 +465,7 @@ class MedicationInventory(models.Model):
     comentarios = models.TextField(
         "comentarios",
         max_length=512,
-        default = "Niguno",
+        default = "Ninguno",
         blank=True,
         null=True,
     )
@@ -551,19 +551,6 @@ class MedicationInventory(models.Model):
         except ObjectDoesNotExist:
             print("no tengo deuda")
 
-
-
-            
-        
-    """
-    def email(self):
-        subj = "informe de duracion de medicamentos de "+self.resident.__str__()
-        msg = "El Residente "+self.resident.__str__()+" tiene  "+str(self.ammount)+" "+self.get_delivery_units_display()+" de "+self.presentation.__str__()+". "+self.calculate_total_span()       
-       # self.email_test(msg,subj)
-        return "correo enviado"
-    """
-
-
     def __str__(self):
         msg = self.presentation.__str__()
         return msg
@@ -572,7 +559,7 @@ class MedicationInventory(models.Model):
         relatives = Relative.objects.filter()
         return 0
 
-
+#FUNCION EXPERIMENTAL PARA ENVIAR CORREOS A FAMILIARES
     def email_test(self,str,subj):
         print("enviando mail")
         subject = "asdasdasd"
@@ -625,14 +612,14 @@ class Loan(models.Model):
 
     presentation = models.ForeignKey(
         Presentation,
-        verbose_name="presentacion",
+        verbose_name="presentación",
         on_delete=models.CASCADE,
         null=True,
         blank=False,
     )     
 
     ammount_loan = models.IntegerField(
-        "prestamo",
+        "préstamo",
         blank = False,
         null=True,
     )

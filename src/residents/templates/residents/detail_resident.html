@@ -357,7 +357,7 @@
         class="btn btn-primary self-stretch prescription_item_edit {% if forloop.counter != 1 %}hidden{% endif %}">EDITAR</a>
 
       <form action="{% url 'residents:delete_prescription' view.kwargs.pk prescription.id %}" method="post"
-        onsubmit="return confirm('¿Estás seguro que deseas eliminar esta prescripicion? Esta acción es irreversible');"
+        onsubmit="return confirm('¿Estás seguro que deseas eliminar esta prescripción? Esta acción es irreversible');"
         class="prescription_item_delete {% if forloop.counter != 1 %}hidden{% endif %}">
         {% csrf_token %}
         <input type="submit" class="btn btn-primary" value="ELIMINAR" />
@@ -391,11 +391,11 @@
     {# Table header #}
     <thead>
       <tr class="font-raleway text-slate-800">
-        <th>PRESENTACION</th>
+        <th>PRESENTACIÓN</th>
         <th>CANTIDAD</th> 
         <th>ENTREGO</th>
-        <th>RECIBIO</th>
-        <th>FECHA DE RECEPCION</th> 
+        <th>RECIBIÓ</th>
+        <th>FECHA DE RECEPCIÓN</th> 
         <th>CONCEPTO</th>   
         <th>COMENTARIOS</th>       
         <th>ACCIONES</th>        
