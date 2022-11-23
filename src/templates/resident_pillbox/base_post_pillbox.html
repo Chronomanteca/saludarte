@@ -8,7 +8,7 @@
 <div class="flex flex-col gap-4 flex-wrap justify-center gap-8 px-8 py-6 border-2 rounded-md border-slate-800">
     <form method = "post">
     {% csrf_token %}
-    <table id="pillbox-datatable" >
+    <table id="resident_pillbox-datatable" >
       {# Table header #}
       <thead>
         <tr class="font-raleway text-slate-800">
@@ -28,7 +28,7 @@
           <td >{{item.name}}</td>
           <td > <input hidden name = "ammount_{{forloop.counter}}" type = "text" value = {{item.total_cantidad}}/> {{item.total_cantidad}}</td>
           <td>  {{item.dosage}}</td>
-          <td><input name = "output_{{forloop.counter}}" type = "text" class = "w-24 text-right " value = {{item.salidas_semanales}}/> mg_ml</td>
+          <td><input name = "output_{{forloop.counter}}" type = "text" class = "w-24 text-right " value = {{item.salidas_semanales}}/> {{item.dosage_unit}}</td>
 
           
         </tr>

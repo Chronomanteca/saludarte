@@ -63,7 +63,7 @@ def manage_pillbox(request, **callback_kwargs):
                     print("no hay deuda")
                     Loan(resident = resident, presentation = pres,loan_units = prescription.dosage_units, ammount_loan = loan).save()
                 inv_loan.save()
-            inv = MedicationInventory(resident = resident, relative = rel,presentation = pres,concept = 2, ammount = -output,comentarios = "Llenado de pastillero",responsible = user)
+            inv = MedicationInventory(resident = resident, relative = rel,presentation = pres,concept = 2,delivery_units = prescription.dosage_units, ammount = -output,comentarios = "Llenado de pastillero",responsible = user)
             data.append(ammount)
             if(output>0):
                 inv.save()
@@ -71,7 +71,7 @@ def manage_pillbox(request, **callback_kwargs):
 
 
         messages.success(
-            request
+            request, "El pastillero se ha llenado correctamente"
         )
         return redirect("residents:index")
 

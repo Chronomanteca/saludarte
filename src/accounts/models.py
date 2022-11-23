@@ -2,7 +2,7 @@ from django.db import models
 from django.urls import reverse_lazy
 
 from django.utils import timezone
-
+from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
@@ -39,7 +39,7 @@ class UserManager(BaseUserManager):
         if not email:
             raise ValueError("The given email must be set")
 
-        email = self.normalize_email(email)
+        email = self.normalize_email(email)        
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
@@ -110,12 +110,16 @@ class User(AbstractBaseUser, Person, PermissionsMixin):
         "fecha de ingreso",
         default=timezone.now,
     )
-
+    try:
+        default_site = Site.objects.get(name = "global")
+    except ObjectDoesNotExist:
+        default_site = Site(name = "global",address = "global").save()
+    print("Imprimiendo el id del sitio default: "+str(default_site.id))
     site = models.ForeignKey(
         Site,
         verbose_name="sede",
         on_delete=models.SET_NULL,
-        default=1,
+        default = default_site.id,
         null=True,
         blank=False,
     )

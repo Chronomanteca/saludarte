@@ -1,0 +1,60 @@
+{% extends "layouts/base_authenticated.html" %}
+{% load static %}
+{% load form_extras %}
+
+{% block body %}
+
+<div class="flex flex-col gap-4 mx-auto">
+
+  {# Page header #}
+  <h1 class="text-4xl text-center self-center font-raleway font-medium text-slate-800">
+    {% block page_header %}{% endblock %}
+  </h1>
+
+  {# Form #}
+  <form class="flex flex-col gap-4" method="post" action="">
+    {% csrf_token %}
+
+    {# Name #}
+    {% with field=form|get_fields:"name"|first %}
+
+    <div class="flex flex-col gap-2">
+      <div class="text-lg uppercase leading-4 font-raleway  text-slate-800">{{ field.label }}</div>
+      <div class="form-group custom-input p-2 border rounded-md border-slate-800">
+        <input type="text" name="{{ field.name }}" id="{{ field.id }}" class="form-control input-text font-roboto"
+          {% if field.value %}value="{{ field.value }}" {% endif %} />
+      </div>
+
+      {% if field.errors %}
+      <div class="message error w-full leading-3 text-sm">{{ field.errors|first }}</div>
+      {% endif %}
+    </div>
+    {% endwith %}
+
+    {# Address #}
+    {% with field=form|get_fields:"address"|first %}
+
+    <div class="flex flex-col gap-2">
+      <div class="text-lg uppercase leading-4 font-raleway  text-slate-800">{{ field.label }}</div>
+      <div class="form-group custom-input p-2 border rounded-md border-slate-800">
+        <input type="text" name="{{ field.name }}" id="{{ field.id }}" class="form-control input-text font-roboto"
+          {% if field.value %}value="{{ field.value }}" {% endif %} />
+      </div>
+
+      {% if field.errors %}
+      <div class="message error w-full leading-3 text-sm">{{ field.errors|first }}</div>
+      {% endif %}
+    </div>
+    {% endwith %}
+
+    {# Action buttons #}
+    <div class="flex gap-3">
+      <input class="btn btn-primary" type="submit" value="GUARDAR" />
+      <a href="{% url 'headquarters:index' %}" class="btn btn-primary">CANCELAR</a>
+    </div>
+
+  </form>
+
+</div>
+
+{% endblock %}

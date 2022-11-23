@@ -1,0 +1,63 @@
+{% extends "layouts/base_authenticated.html" %}
+
+{# TODO: Timezones are kinda broken and need to be manually set #}
+{% load tz %}
+
+{% block title %}Usuarios{% endblock %}
+
+{% block body %}
+
+<div class="container flex flex-col gap-4 mx-auto">
+
+  {% if messages %}
+  <div class="flex flex-col gap-3">
+    {% for message in messages %}
+    <div class="message w-full {% if message.tags %}{{ message.tags }}{% endif %}">
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {# Action buttons #}
+  <div class="flex gap-3">
+    <a href="{% url 'headquarters:new' %}" class="btn btn-primary">NUEVA SEDE</a>
+  </div>
+
+  {# Users table, rendered using datatables (js) #}
+  <table id="users-datatable" class="display compact">
+    {# Table header #}
+    <thead>
+      <tr class="font-raleway text-slate-800">
+        <th>NOMBRE</th>
+        <th>DIRECCION</th>
+        <th>ACCIONES</th>
+      </tr>
+    </thead>
+
+    {# Table body #}
+    <tbody class="font-raleway">
+
+      {% for site in sites %}
+      <tr>
+        <td>{{ site.name }}</td>
+        <td>{{ site.address }}</td>
+        <td class="flex flex-wrap gap-2">
+          <div class="flex flex-wrap items-start gap-2">
+            <a href="{% url 'headquarters:edit' site.id %}" class="btn btn-primary py-1">EDITAR</a>
+
+            <form action="{% url 'headquarters:delete' site.id %}" method="post"
+              onsubmit="return confirm('¿Estás seguro que deseas eliminar esta sede? Esta acción es irreversible');">
+              {% csrf_token %}
+              <input type="submit" class="btn btn-primary py-1" value="ELIMINAR" />
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+</div>
+
+{% endblock %}

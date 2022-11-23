@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "residents.apps.ResidentsConfig",
     "medications.apps.MedicationsConfig",
     "stock.apps.StockConfig",
+    "headquarters.apps.HeadquartersConfig",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",

@@ -17,9 +17,8 @@ from django.db.models import Value, F
 
 from .models import MedicationInventory, Resident
 from medications.models import Presentation
-
-
-
+ 
+GLOBAL = "global"
 class OnlyAccessMySiteResidentsMixin(UserPassesTestMixin):
     """
     Verifies that the current user shares the same
@@ -31,12 +30,15 @@ class OnlyAccessMySiteResidentsMixin(UserPassesTestMixin):
     def test_func(self):
         # If the user's site is Global (1) then it can access
         # all the residents.
-        if self.request.user.site.id == 1:
+        print("Probando Mixin")
+        if self.request.user.site.name == "global":
+            print("Retornando True, soy un superusuario y tengo site global")
             return True
-
-        # Otherwise, match the user's site to the resident's site.
-        resident = get_object_or_404(Resident, pk=self.kwargs["pk"])
-        return self.request.user.site.id == resident.site.id
+        else:
+            # Otherwise, match the user's site to the resident's site.
+            print("no soy un super usuario, mi site es: "+str(self.request.user.site))
+            resident = get_object_or_404(Resident, pk=self.kwargs["pk"])
+            return self.request.user.site.id == resident.site.id
 
 
 class ResidentsIndexView(LoginRequiredMixin, ListView):
@@ -60,12 +62,12 @@ class ResidentsIndexView(LoginRequiredMixin, ListView):
         then it returns all the residents in the database.
         """
 
-        print("testing")
-
-        if self.request.user.site.id == 1:
+        print(self.request.user.site)
+        
+        if self.request.user.site.name == "global":
             return Resident.objects.all()
-
-        return Resident.objects.filter(site=self.request.user.site)
+        else:
+            return Resident.objects.filter(site=self.request.user.site)
 
 
 class DetailResidentView(
@@ -146,7 +148,7 @@ class NewResidentView(LoginRequiredMixin, CreateView):
 
 
 class EditResidentView(
-    LoginRequiredMixin, OnlyAccessMySiteResidentsMixin, UpdateView
+    LoginRequiredMixin, OnlyAccessMySiteResidentsMixin,UpdateView
 ):
     """
     It shows a form to edit an existing resident.
@@ -165,6 +167,15 @@ class EditResidentView(
         "date_joined",
         "eps",
     ]
+
+    def get_success_url(self):
+        print(self.request)
+        messages.success(
+            self.request, self.request.body
+        )
+        return reverse_lazy("residents:index")    
+
+
 
 
 class DeleteResidentView(

@@ -20,6 +20,12 @@
   {% endif %}
 
   {# Action buttons #}
+
+
+  {#attempt to make a callback to backend in order to send emails#}
+  
+
+
   
   <div class="flex gap-3">
   <div>
@@ -32,8 +38,12 @@
   </div>  
     <button onclick="handle_dates()" id="btn_generate_report" class="btn btn-primary">CALCULAR SALDOS</button>
     <button onclick="printReport()" id="btn_generate_report" class="btn btn-primary">IMPRIMIR REPORTE</button>
-  </div>
+    <form method = "post" action = "">
 
+      {% csrf_token %}
+    <input class="btn btn-primary" type="submit" value="ENVIAR CORREO A FAMILIARES "  />
+  </div>
+  <input hidden name = "secret" type = "text" value = "este es el valor oculto"/>
   {# Residents table, rendered using datatables (js) #}
   <table id="stock-datatable" class="display compact nowrap">
     {# Table header #}
@@ -43,7 +53,9 @@
         <th>MEDICAMENTO</th>
         <th>DOSIS DIARIA</th>
         <th>CANTIDAD EN RESERVA</th>
+        <th>DEUDA</th>
         <th id ="head_target">SALDOS</th>
+        <th hidden> Request Data </th>
       </tr>
     </thead>
 
@@ -91,20 +103,48 @@
         </td>
         {#Resident Predicted ammount#}
         <td>
-          <table id = "table_target_{{forloop.counter}}" class= "display compact nowrap cell-border">
+          <table id = "table_debt{{forloop.counter}}" class= "display compact nowrap cell-border">
           {%for entry in  resident.get_inventory_info%}
             <tr>
               <td id = "output_{{forloop.counter}}">
-              
+                {{entry.deuda}}
               </td>
             </tr>
           {%endfor%}
           </table>
         </td>
+        {#Resident Predicted ammount#}
+        <td>
+          <table id = "table_target_{{forloop.counter}}" class= "display compact nowrap cell-border">
+          {%for entry in  resident.get_inventory_info%}
+            <tr>
+              <td id = "output_{{forloop.counter}}">
+                <input hidden name = "request_output_{{forloop.counter}}" type = "text" value = "Sin datos"/>
+              </td>
+            </tr>
+          {%endfor%}
+          </table>
+        </td>
+        {#Resident Hidden output Predicted ammount#}
+        <td>
+          <table hidden id = "request_table_target_{{forloop.counter}}" class= "display compact nowrap cell-border">
+          {%for entry in  resident.get_inventory_info%}
+            <tr>
+              <td id = "output_{{forloop.counter}}">
+                <input hidden name = "hidden_request_output_{{forloop.counter}}" type = "text" value = "Sin datos"/>                              
+              </td>
+            </tr>
+          {%endfor%}
+          </table>
+        </td>
+
+        
       </tr>
       {% endfor %}
     </tbody>
   </table>
+
+</form>
 
 </div>
 
@@ -118,6 +158,10 @@
 //Date and report management
 
 
+function handle_emails(){
+   alert("Submit button clicked!");
+   return true;
+}
 
 function handle_dates(){
   var dateStart = new Date(document.getElementById("dateStart").value);
@@ -133,8 +177,11 @@ function handle_dates(){
   }
   else{
     var word = "DIAS";
-    if(days == 0){
-      var word = "DIA";
+    if(days == 1){
+      word = "DIA";
+    }
+    if(days == 0 ){
+      word = "DIAS";
     }
     generateReport(days,word)
     }
@@ -145,8 +192,9 @@ function handle_dates(){
 
 
 function generateReport(days,word){
+  console.log("Generando reporte");
   var header = document.getElementById("head_target");
-  header.innerText ="SALDOS PARA "+" "+word;
+  header.innerText ="SALDOS PARA "+days+" "+word;
 
 
   for(let i = 1, row; row = table.rows[i]; i++){
@@ -155,9 +203,14 @@ function generateReport(days,word){
     var tableDosage = document.getElementById(idTableDosage).getElementsByTagName("tr");
     
 
-
+    
     var tableTotal = document.getElementById("table_totals_"+i).getElementsByTagName("tr");
+    "request_output_{{forloop.counter}}"
+    
     var tableTarget = document.getElementById("table_target_"+i).getElementsByTagName("tr");
+    var hidden_output = document.getElementById("request_table_target_"+i).getElementsByTagName("tr");
+    hidden_output.item(0).innerText = 2
+    console.log("Imprimiendo valor oculto: " + hidden_output.item(0).innerText)
 
 
     for(let j =0; j<tableTarget.length;j++){
@@ -175,7 +228,9 @@ function generateReport(days,word){
       var calculated = total- (daily*days);
 
       var msg = formatCalculation(calculated,unit)
-      tableTarget.item(j).innerText = msg;
+      tableTarget.item(j).innerText = msg;      
+      hidden_output.item(0).innerText = msg
+      console.log("Imprimiendo valor oculto: " + hidden_output.item(0).innerText)
       
     }
   }

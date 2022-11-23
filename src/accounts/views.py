@@ -2,9 +2,7 @@ from django.urls import reverse
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import get_user_model
-
 from django.views.generic import DetailView, UpdateView
-
 
 class ProfileView(LoginRequiredMixin, DetailView):
     """

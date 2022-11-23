@@ -53,14 +53,18 @@ class Resident(Person):
     Overriding onSave method so it creates a placeholder relative "Saludarte" as an auxiliary relative for certain tasks in the application
     """
     def save(self, *args, **kwargs):
+        print("Se ha realizado una transaccion de guardado")
+        
         if not self.pk:
+            print("Residente no existia en BD, creando familiar auxiliar")
             # This code only happens if the objects is
             # not in the database yet. Otherwise it would
             # have pk
-            
-
-            super(Resident, self).save(*args, **kwargs)
+            super(Resident, self).save(*args, **kwargs)                   
             Relative(first_name="Saludarte", last_name ="Gestion", identification_type = 1,identification_number = 00000,resident = self).save()
+        else:
+            print("Residente ya existia, solo se esta editando")
+            super(Resident, self).save(*args, **kwargs) 
 
     def get_full_name(self):
         return self.first_name + " " +self.last_name
@@ -84,6 +88,7 @@ class Resident(Person):
 
             e["name"] = pr.__str__()
             e["dosage"] = pres.get_full_dosage()
+            e["dosage_unit"] = pres.get_dosage_units_display()
             e["total_cantidad"] = str(e.get("total_cantidad"))+" "+str(inv.get_delivery_unit())    
             e["salidas_semanales"] = pres.salida_semanal()   
             try:

@@ -5,7 +5,7 @@ var dt = require("datatables.net")(window, $);
 $(document).ready(function () {
   $("#users-datatable").DataTable({
     language: {
-      url: "../static/datatables.es-ES.json",
+      url: "/static/datatables.es-ES.json",
     },
     // Disable sorting on the 7th column (actions)
     columnDefs: [
@@ -35,6 +35,25 @@ $(document).ready(function () {
   });
 });
 
+// Resident inventory datatable
+$(document).ready(function () {
+  $("#resident_inventory-datatable").DataTable({
+    language: {
+      url: "/static/datatables.es-ES.json",
+    },
+  });
+});
+
+// Resident Pillbox datatable
+$(document).ready(function () {
+  $("#resident_pillbox-datatable").DataTable({
+    language: {
+      url: "/static/datatables.es-ES.json",
+    },
+    // Disable sorting on the 7th column (actions)
+  });
+});
+
 // Medications datatable
 $(document).ready(function () {
   $("#medications-datatable").DataTable({
@@ -46,11 +65,14 @@ $(document).ready(function () {
       {
         searchable: false,
         orderable: false,
-        targets: [1, 2],
+        
       },
     ],
   });
 });
+
+
+
 
 // pillbox datatable
 $("#pillbox-datatable").DataTable({

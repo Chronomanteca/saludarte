@@ -54,7 +54,7 @@
   {% if page_obj.number == 1 %}
   {% with resident=page_obj|first %}
 
-  <div class="flex flex-col gap-4">
+  <div class="flex flex-col gap-4 ">
     <div class="flex flex-wrap justify-center gap-8 px-8 py-6 border-2 rounded-md border-slate-800">
 
       {# Left side: resident's picture #}
@@ -386,8 +386,8 @@
   {% with entries=page_obj|first %}
   <div class="flex flex-col gap-4">
     <div class="flex flex-wrap justify-center gap-8 px-8 py-6 border-2 rounded-md border-slate-800">
-  {# Medications table, rendered using datatables (js) #}
-  <table id="medications-datatable" class="compact">
+  {# table, rendered using datatables (js) #}
+  <table id="resident_inventory-datatable" class="display compact">
     {# Table header #}
     <thead>
       <tr class="font-raleway text-slate-800">
@@ -455,7 +455,7 @@
     <div class="flex flex-col gap-4 flex-wrap justify-center gap-8 px-8 py-6 border-2 rounded-md border-slate-800">
       
         {% csrf_token %}
-        <table id="medications-datatable" >
+        <table id="resident_pillbox-datatable" class = "display compact" >
           {# Table header #}
           <thead>
             <tr class="font-raleway text-slate-800">
